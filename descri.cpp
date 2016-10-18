@@ -127,7 +127,7 @@ float descri::contourLength(vector<Point> singleContour)
 // return vector of sample point
 vector<Point> descri::getSamplePoints(vector<Point> singleContour)
 {
-	int pointCount = singleContour.size()/2;
+	int pointCount = singleContour.size()/4;
 	int totalPoints = singleContour.size();
 
 	vector<int> pointIndex;
