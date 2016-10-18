@@ -33,8 +33,8 @@ float currentScore = 10000000;
 int main()
 {
 	clock_t start = clock();
-	string tmp = "020.png";
-	string tmp2 = "085.png";
+	string tmp = "foodImg/148.png";
+	string tmp2 = "foodImg/147.png";
 	descri descri1(tmp);
 	Mat inputDes1 = descri1.resultDescri;
 	descri descri2(tmp2);
