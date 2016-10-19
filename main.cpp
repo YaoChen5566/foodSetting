@@ -88,7 +88,7 @@ int main()
 
 
 	//cout << "size: "<<matchSeq1.size() << endl;
-	Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, true); //(src, dst)
+	Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
 	cout <<"type: "<<warpingResult.type()<<endl;
 
 	Mat vectorXY = Mat::ones(3, 1, CV_64FC1);
