@@ -9,26 +9,20 @@
 #include <algorithm>
 
 #include "descri.h"
+#include "compare.h"
 
 # define PI 3.1415926
 
 using namespace std;
 using namespace cv;
 
-Mat desToGrayImg(Mat input);
-void compareDes(Mat input1, Mat input2, vector<Point> Seq1, vector<Point> Seq2);
-Mat subMatrix(Mat input, int row, int col, int range);
+
+//void compareDes(Mat input1, Mat input2);
+//Mat subMatrix(Mat input, int row, int col, int range);
 vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
 
 
-int start1;
-Mat des1;
-vector<Point> pointSeq1;
-int start2;
-Mat des2;
-vector<Point> pointSeq2;
-int range;
-float currentScore = 10000000;
+
 
 int main()
 {
@@ -40,7 +34,7 @@ int main()
 	descri descri2(tmp2);
 	Mat inputDes2 = descri2.resultDescri;
 
-	compareDes(inputDes1,inputDes2, descri1.sampleResult,descri2.sampleResult);
+	comp compDes(inputDes1,inputDes2);
 
 	clock_t finish = clock(); // compare finish
 
@@ -54,27 +48,30 @@ int main()
 
 	Mat warpingResult = input1.clone();
 
-	for(int i = 0 ; i < range ; i++)
+	vector<Point> pointSeq1 = descri1.sampleResult; 
+	vector<Point> pointSeq2 = descri2.sampleResult;
+
+	for(int i = 0 ; i < compDes.range ; i++)
 	{
-		circle(input1_draw, pointSeq1[(start1+i)%pointSeq1.size()],1,Scalar(0,0,255,255),2);
-		circle(input2_draw, pointSeq2[(start2+i)%pointSeq2.size()],1,Scalar(0,0,255,255),2);
+		circle(input1_draw, pointSeq1[(compDes.startIndex1+i)%pointSeq1.size()],1,Scalar(0,0,255,255),2);
+		circle(input2_draw, pointSeq2[(compDes.startIndex2+i)%pointSeq2.size()],1,Scalar(0,0,255,255),2);
 		
 	}
 	Mat des1RGB;
 	Mat des2RGB;
-	cvtColor(des1, des1RGB, CV_GRAY2RGB);
-	cvtColor(des2, des2RGB, CV_GRAY2RGB);
-	rectangle(des1RGB,Point(start1,start1) ,Point((start1+range)%pointSeq1.size(),(start1+range)%pointSeq1.size()), Scalar(0,0,255),1);
-	rectangle(des2RGB,Point(start2,start2) ,Point((start2+range)%pointSeq2.size(),(start2+range)%pointSeq2.size()), Scalar(0,0,255),1);
+	cvtColor(inputDes1, des1RGB, CV_GRAY2RGB);
+	cvtColor(inputDes2, des2RGB, CV_GRAY2RGB);
+	rectangle(des1RGB,Point(compDes.startIndex1,compDes.startIndex1) ,Point((compDes.startIndex1+compDes.range)%pointSeq1.size(),(compDes.startIndex1+compDes.range)%pointSeq1.size()), Scalar(0,0,255),1);
+	rectangle(des2RGB,Point(compDes.startIndex2,compDes.startIndex2) ,Point((compDes.startIndex2+compDes.range)%pointSeq2.size(),(compDes.startIndex2+compDes.range)%pointSeq2.size()), Scalar(0,0,255),1);
 	imwrite("result1.png", input1_draw);
 	imwrite("result2.png", input2_draw);
 	imwrite("des1.png", des1RGB);
 	imwrite("des2.png", des2RGB);
 
-	cout << "@start1: "<< start1<<" @start2: "<<start2<<" @range: "<<range<<endl;
+	cout << "@start1: "<< compDes.startIndex1 <<" @start2: "<< compDes.startIndex2 <<" @range: "<< compDes.range <<endl;
 
-	vector<Point> matchSeq1 = subPointSeq(pointSeq1, start1, range);
-	vector<Point> matchSeq2 = subPointSeq(pointSeq2, start2, range);
+	vector<Point> matchSeq1 = subPointSeq(pointSeq1, compDes.startIndex1, compDes.range);
+	vector<Point> matchSeq2 = subPointSeq(pointSeq2, compDes.startIndex2, compDes.range);
 
 	for(int i = 0 ; i < matchSeq1.size() ; i++)
 	{
@@ -130,20 +127,7 @@ vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range)
 	return result;
 }
 
-Mat desToGrayImg(Mat input)
-{
-	Mat tmp = Mat::zeros( input.rows, input.cols ,CV_32FC1);
-
-	for(int i = 0 ; i < input.rows ; i++)
-	{
-		for(int j = 0 ; j < input.cols ; j++)
-		{
-			tmp.at<float>(i,j) = (input.at<float>(i,j)*255/180);
-		}
-	}
-	return tmp;
-}
-
+/*
 Mat subMatrix(Mat input, int row, int col, int range)
 {
 	Mat subM = Mat::zeros(range, range, CV_32FC1);
@@ -158,7 +142,7 @@ Mat subMatrix(Mat input, int row, int col, int range)
 }
 
 // compare two descriptor
-void compareDes(Mat input1, Mat input2, vector<Point> Seq1, vector<Point> Seq2)
+void compareDes(Mat input1, Mat input2)
 {
 	int r = 25; // square size
 	int lefttopPoint1 = 0;
@@ -187,8 +171,6 @@ void compareDes(Mat input1, Mat input2, vector<Point> Seq1, vector<Point> Seq2)
 				currentScore = getScore;
 				start1 = i;
 				des1 = input1;
-				pointSeq1 = Seq1;
-				pointSeq2 = Seq2;
 				des2 = input2;
 				start2 = j;
 				range = r;
@@ -197,3 +179,4 @@ void compareDes(Mat input1, Mat input2, vector<Point> Seq1, vector<Point> Seq2)
 	}
 	cout << "score: "<<currentScore<<endl;
 }
+*/
