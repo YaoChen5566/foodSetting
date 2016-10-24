@@ -32,18 +32,17 @@ float currentScore = 10000000;
 
 int main()
 {
-	clock_t start = clock();
-	string tmp = "foodImg/134.png";
-	string tmp2 = "foodImg/142.png";
+	clock_t start = clock(); // compare start
+	string tmp = "foodImg/040.png";
+	string tmp2 = "foodImg/061.png";
 	descri descri1(tmp);
 	Mat inputDes1 = descri1.resultDescri;
 	descri descri2(tmp2);
 	Mat inputDes2 = descri2.resultDescri;
-	//cout <<"size: "<<descri1.sampleResult.size()<<endl;
 
 	compareDes(inputDes1,inputDes2, descri1.sampleResult,descri2.sampleResult);
-	//cout << "size: "<< descri1.sampleResult.size()<<endl;
-	clock_t finish = clock();
+
+	clock_t finish = clock(); // compare finish
 
 	cout << "time: " << finish-start<<endl;
 
@@ -55,16 +54,12 @@ int main()
 
 	Mat warpingResult = input1.clone();
 
-	//resize(input1, input1, Size(input1.cols*2, input1.rows*2) );
-	//resize(input2, input2, Size(input2.cols*2, input2.rows*2) );
-
 	for(int i = 0 ; i < range ; i++)
 	{
 		circle(input1_draw, pointSeq1[(start1+i)%pointSeq1.size()],1,Scalar(0,0,255,255),2);
 		circle(input2_draw, pointSeq2[(start2+i)%pointSeq2.size()],1,Scalar(0,0,255,255),2);
 		
 	}
-	//Point pt1 =  Point(10, 8);
 	Mat des1RGB;
 	Mat des2RGB;
 	cvtColor(des1, des1RGB, CV_GRAY2RGB);
@@ -87,10 +82,9 @@ int main()
 	}
 
 
-	//cout << "size: "<<matchSeq1.size() << endl;
 	Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
-	cout <<"type: "<<warpingResult.type()<<endl;
-
+	//cout <<"type: "<<warpingResult.type()<<endl;
+	cout <<"scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
 	Mat vectorXY = Mat::ones(3, 1, CV_64FC1);
 	Mat resultXY(2, 1, CV_32FC1);
 	for(int i = 0 ; i < input2.rows ; i++)
@@ -104,12 +98,7 @@ int main()
 				vectorXY.at<double>(0,0) = j;
 				vectorXY.at<double>(1,0) = i;
 				vectorXY.at<double>(2,0) = 1;
-				
-				//resultXY.at<float>(0, 0) = warp_mat.at<float>(0, 0)*vectorXY.at<float>(0,0) + warp_mat.at<float>(0, 1)*vectorXY.at<float>(1,0) + warp_mat.at<float>(0, 2)*vectorXY.at<float>(2,0);
 
-				//resultXY.at<float>(1, 0) = warp_mat.at<float>(1, 0)*vectorXY.at<float>(0,0) + warp_mat.at<float>(1, 1)*vectorXY.at<float>(1,0) + warp_mat.at<float>(1, 2)*vectorXY.at<float>(2,0);
-
-//				multiply(warp_mat, vectorXY, resultXY );
 				Mat resultXY = warp_mat*vectorXY;
 				dstBGRA[0] = bgra[0];
 				dstBGRA[1] = bgra[1];
@@ -117,10 +106,8 @@ int main()
 				dstBGRA[3] = bgra[3];
 			
 				if(int(resultXY.at<double>(0, 0)) >=0 && int(resultXY.at<double>(1, 0)) >= 0 && int(resultXY.at<double>(0, 0)) < warpingResult.rows && int(resultXY.at<double>(1, 0)) < warpingResult.cols)
-				{
-					//cout <<""
 					warpingResult.at<Vec4b>((resultXY.at<double>(1, 0)),(resultXY.at<double>(0, 0))) = dstBGRA;
-				}
+			
 			}
 
 		}
@@ -173,7 +160,7 @@ Mat subMatrix(Mat input, int row, int col, int range)
 // compare two descriptor
 void compareDes(Mat input1, Mat input2, vector<Point> Seq1, vector<Point> Seq2)
 {
-	int r = 15; // square size
+	int r = 25; // square size
 	int lefttopPoint1 = 0;
 	int lefttopPoint2 = 0;
 	//float currentScore = 10000000;
@@ -189,16 +176,8 @@ void compareDes(Mat input1, Mat input2, vector<Point> Seq1, vector<Point> Seq2)
 
 			Mat minus;
 			absdiff(tmp1, tmp2, minus);
-			//Scalar s = cv::sum(minus);
 			
 			getScore = cv::sum(minus)[0];
-			/*for(int m = 0 ; m < r ; m++)
-			{
-				for(int n = 0 ; n < r ; n++)
-				{
-					getScore += pow((tmp1.at<float>(m, n) - tmp2.at<float>(m, n)), 2);
-				}
-			}*/
 				
 			getScore /= pow(r,2);
 
