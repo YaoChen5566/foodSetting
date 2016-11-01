@@ -23,8 +23,6 @@ public:
 	int score;
 
 	comp(Mat des1, Mat des2);
-
-	
 	
 private:
 	

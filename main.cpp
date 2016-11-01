@@ -27,8 +27,8 @@ vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
 int main()
 {
 	clock_t start = clock(); // compare start
-	string tmp = "foodImg/040.png";
-	string tmp2 = "foodImg/061.png";
+	string tmp = "foodImg/158.png";
+	string tmp2 = "foodImg/157.png";
 	descri descri1(tmp);
 	Mat inputDes1 = descri1.resultDescri;
 	descri descri2(tmp2);
@@ -84,32 +84,33 @@ int main()
 	cout <<"scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
 	Mat vectorXY = Mat::ones(3, 1, CV_64FC1);
 	Mat resultXY(2, 1, CV_32FC1);
-	for(int i = 0 ; i < input2.rows ; i++)
-	{
-		for(int j = 0 ; j < input2.cols ; j++)
-		{
-			Vec4b dstBGRA;
-			Vec4b & bgra = input2.at<Vec4b>(i, j);
-			if(bgra[3] != 0) // not transparent
-			{
-				vectorXY.at<double>(0,0) = j;
-				vectorXY.at<double>(1,0) = i;
-				vectorXY.at<double>(2,0) = 1;
+	//for(int i = 0 ; i < input2.rows ; i++)
+	//{
+	//	for(int j = 0 ; j < input2.cols ; j++)
+	//	{
+	//		Vec4b dstBGRA;
+	//		Vec4b & bgra = input2.at<Vec4b>(i, j);
+	//		if(bgra[3] != 0) // not transparent
+	//		{
+	//			vectorXY.at<double>(0,0) = j;
+	//			vectorXY.at<double>(1,0) = i;
+	//			vectorXY.at<double>(2,0) = 1;
 
-				Mat resultXY = warp_mat*vectorXY;
-				dstBGRA[0] = bgra[0];
-				dstBGRA[1] = bgra[1];
-				dstBGRA[2] = bgra[2];
-				dstBGRA[3] = bgra[3];
-			
-				if(int(resultXY.at<double>(0, 0)) >=0 && int(resultXY.at<double>(1, 0)) >= 0 && int(resultXY.at<double>(0, 0)) < warpingResult.rows && int(resultXY.at<double>(1, 0)) < warpingResult.cols)
-					warpingResult.at<Vec4b>((resultXY.at<double>(1, 0)),(resultXY.at<double>(0, 0))) = dstBGRA;
-			
-			}
+	//			Mat resultXY = warp_mat*vectorXY;
+	//			dstBGRA[0] = bgra[0];
+	//			dstBGRA[1] = bgra[1];
+	//			dstBGRA[2] = bgra[2];
+	//			dstBGRA[3] = bgra[3];
+	//		
+	//			if(int(resultXY.at<double>(0, 0)) >=0 && int(resultXY.at<double>(1, 0)) >= 0 && int(resultXY.at<double>(0, 0)) < warpingResult.rows && int(resultXY.at<double>(1, 0)) < warpingResult.cols)
+	//				warpingResult.at<Vec4b>((resultXY.at<double>(1, 0)),(resultXY.at<double>(0, 0))) = dstBGRA;
+	//		
+	//		}
 
-		}
-	}
-
+	//	}
+	//}
+	//
+	warpAffine(input2, warpingResult, warp_mat, warpingResult.size());
 	imwrite("warping.png", warpingResult);
 	//waitKey();
 	system("Pause");
