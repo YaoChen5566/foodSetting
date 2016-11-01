@@ -23,10 +23,21 @@ descri::descri(string &imgPath)
 	//desToGrayImg(input);
 }
 
+descri::descri(vector<Point> contour)
+{
+	//get sample points: points in vector
+	sampleResult = getSamplePoints(contour);
+
+	//get descriptor
+	resultDescri = descriptor(sampleResult);
+	//return grayDescri;
+}
+
+
 // inputImg to des
 void descri::imgToDes(Mat input)
 {
-	cout <<"not resort"<<endl;
+	//cout <<"not resort"<<endl;
 	// resize input image
 	Mat inputScaleTwo;
 	//resize(input, inputScaleTwo, Size(input.cols*2, input.rows*2) );
@@ -99,7 +110,7 @@ int descri::maxContour(vector<vector<Point>> contours)
 			maxIndex = i;
 		}
 	}
-	cout << "maxsize: "<<maxSize<<endl;
+	//cout << "maxsize: "<<maxSize<<endl;
 	return maxIndex;
 }
 

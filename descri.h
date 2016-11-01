@@ -18,7 +18,7 @@ class descri
 public:
 	
 	descri(string &imgPath);
-
+	descri(vector<Point> contour);
 	
 	vector<Point> sampleResult;
 

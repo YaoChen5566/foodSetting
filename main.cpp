@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <vector>
 #include <algorithm>
+#include <dirent.h>
+#include <errno.h>
 
 #include "descri.h"
 #include "compare.h"
@@ -17,18 +19,70 @@ using namespace std;
 using namespace cv;
 
 
-//void compareDes(Mat input1, Mat input2);
-//Mat subMatrix(Mat input, int row, int col, int range);
 vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
-
-
+int getdir(string dir, vector<string> &files);
 
 
 int main()
 {
+
+	Mat userDraw = imread("inputImg/man.jpg");
+	Mat userDrawGray;
+	cvtColor(userDraw, userDrawGray, CV_RGB2GRAY);
+	Mat userDrawCanny;
+	Canny(userDrawGray, userDrawCanny, 50, 150, 3);
+	vector<vector<Point>> userDrawContours;
+	vector<Vec4i> hierarchy;
+	findContours(userDrawCanny, userDrawContours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_NONE, Point(0, 0) );
+	
+
+	string dir = string("foodImg/");
+	vector<string> files = vector<string>();
+	getdir(dir, files);
+  
+	Mat drawing = Mat::zeros( userDraw.size(), CV_8UC3 );
+	drawContours( drawing, userDrawContours, 0 , Scalar(0,0,255), 2, 8, hierarchy, 0, Point() );
+	for(int i = 0 ; i < 1/*userDrawContours.size()*/ ; i++)
+	{
+		descri descriUser(userDrawContours[i]);
+		Mat userDrawDes = descriUser.resultDescri;
+		
+		for(int j = 2 ; j < files.size() ; j++)
+		{
+			string foodImg = dir + files[j];
+			Mat food = imread(foodImg, -1);
+
+			descri desFood(foodImg);
+			Mat foodDes = desFood.resultDescri;
+			comp compDes(userDrawDes,foodDes);
+
+			vector<Point> matchSeq1 = subPointSeq(descriUser.sampleResult, compDes.startIndex1, compDes.range);
+			vector<Point> matchSeq2 = subPointSeq(desFood.sampleResult, compDes.startIndex2, compDes.range);
+
+			Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
+			//cout <<"type: "<<warpingResult.type()<<endl;
+			//cout << warp_mat.size()<<endl;
+			if(warp_mat.size() != cv::Size(0,0))
+			{
+				cout << "file: "<< files[j]<<endl;
+				cout << "score: "<<compDes.score<<endl;;
+				cout << "scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
+				warpAffine(food, userDraw, warp_mat, food.size());
+			}
+
+		}
+	}
+
+
+/*
+	//Mat drawing = Mat::zeros( inputCanny.size(),CV_8UC1);
+
 	clock_t start = clock(); // compare start
 	string tmp = "foodImg/158.png";
 	string tmp2 = "foodImg/157.png";
+	Mat input1 = imread(tmp,-1);
+	Mat input2 = imread(tmp2,-1);
+
 	descri descri1(tmp);
 	Mat inputDes1 = descri1.resultDescri;
 	descri descri2(tmp2);
@@ -39,10 +93,7 @@ int main()
 	clock_t finish = clock(); // compare finish
 
 	cout << "time: " << finish-start<<endl;
-
-	Mat input1 = imread(tmp,-1);
-	Mat input2 = imread(tmp2,-1);
-
+	
 	Mat input1_draw = input1.clone();
 	Mat input2_draw = input2.clone();
 
@@ -54,8 +105,7 @@ int main()
 	for(int i = 0 ; i < compDes.range ; i++)
 	{
 		circle(input1_draw, pointSeq1[(compDes.startIndex1+i)%pointSeq1.size()],1,Scalar(0,0,255,255),2);
-		circle(input2_draw, pointSeq2[(compDes.startIndex2+i)%pointSeq2.size()],1,Scalar(0,0,255,255),2);
-		
+		circle(input2_draw, pointSeq2[(compDes.startIndex2+i)%pointSeq2.size()],1,Scalar(0,0,255,255),2);	
 	}
 	Mat des1RGB;
 	Mat des2RGB;
@@ -112,6 +162,7 @@ int main()
 	//
 	warpAffine(input2, warpingResult, warp_mat, warpingResult.size());
 	imwrite("warping.png", warpingResult);
+*/
 	//waitKey();
 	system("Pause");
 }
@@ -126,4 +177,21 @@ vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range)
 		result.push_back(inputSeq[(startIndex+i)%inputSeq.size()]);
 	}
 	return result;
+}
+
+int getdir(string dir, vector<string> &files)
+{
+    DIR *dp;
+    struct dirent *dirp;
+    if((dp = opendir(dir.c_str())) == NULL)
+	{
+        cout << "Error(" << errno << ") opening " << dir << endl;
+        return errno;
+    }
+    while((dirp = readdir(dp)) != NULL)
+	{
+		files.push_back(string(dirp->d_name));
+    }
+    closedir(dp);
+    return 0;
 }

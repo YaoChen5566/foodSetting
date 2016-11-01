@@ -73,7 +73,8 @@ void comp::compareDes(Mat input1, Mat input2)
 	{
 		for(int j = 0 ; j < subSum2.size() ; j++)
 		{
-			getScore = subSum1[i] - subSum2[j];
+			
+			getScore = fabs(subSum1[i] - subSum2[j]);
 			getScore /= pow(r, 2);
 			if(getScore < currentScore)
 			{
@@ -82,6 +83,7 @@ void comp::compareDes(Mat input1, Mat input2)
 				startIndex1 = i;
 				startIndex2 = j;
 				range = r;
+				score = currentScore;
 			}
 		}
 	}
