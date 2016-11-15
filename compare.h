@@ -20,7 +20,7 @@ public:
 	int startIndex1;
 	int startIndex2;
 	int range;
-	int score;
+	double score;
 
 	comp(Mat des1, Mat des2);
 	
