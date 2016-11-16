@@ -168,7 +168,6 @@ vector<Point> descri::getSamplePoints(vector<Point> singleContour)
 	return sampleResult;
 }
 
-
 // get descriptor
 Mat descri::descriptor(vector<Point> samplePoints)
 {
@@ -178,35 +177,79 @@ Mat descri::descriptor(vector<Point> samplePoints)
 	
 	int delta = 3;
 	float tmp = 0;
-	Mat shapeDes = Mat::zeros(samplePoints.size()/*+samplePoints.size()/2*/,samplePoints.size()/*+samplePoints.size()/2*/,CV_32FC1); 
+	int pointsNum = samplePoints.size();
+	Mat shapeDes = Mat::zeros(pointsNum,pointsNum,CV_32FC1);
+
 	for(int i = 0 ; i < shapeDes.rows ; i++)
 	{
 		for(int j = 0 ; j < shapeDes.cols ; j++)
 		{
-			pi = samplePoints[i/* % samplePoints.size()*/];
-			pj = samplePoints[j/* % samplePoints.size()*/];
+			pi = samplePoints[i];
+			pj = samplePoints[j];
 			
 			
-			if(abs(int((i/* % samplePoints.size()*/)-(j/* % samplePoints.size()*/))) < delta)
+			if(abs(int((i)-(j))) < delta)
 			{
 				shapeDes.at<float>(i,i) = 0;
 			}
 			else 
 			{
-				if((i/* % samplePoints.size()*/) > (j/* % samplePoints.size()*/))
-					pjMinusDelta = samplePoints[((j/* % samplePoints.size()*/)+delta/*+samplePoints.size()*/)/*%samplePoints.size()*/];
+				if(i > j)
+					pjMinusDelta = samplePoints[j+delta];
 				else
-					pjMinusDelta = samplePoints[((j/* % samplePoints.size()*/)-delta/*+samplePoints.size()*/)/*%samplePoints.size()*/];
+					pjMinusDelta = samplePoints[j-delta];
 
 				tmp = angle(pi, pj, pjMinusDelta);
-				//cout <<"i: "<<i<<", j:" <<j<<", angle: "<<255-(tmp*255/180) <<endl;
-				//shapeDes.at<float>(i,j) = (tmp*255/180);
 				shapeDes.at<float>(i,j) = tmp;
-				//shapeDes.at<float>(j,i) = 255-(tmp*255/180);
 			}
 		}
 	}
 	return shapeDes;
+}
+
+// get seq descriptor with n start point
+vector<Mat> descri::getSeqDescriptor(vector<Point> samplePoints)
+{
+	Point pi;
+	Point pj;
+	Point pjMinusDelta;
+	
+	int delta = 3;
+	float tmp = 0;
+	int pointsNum = samplePoints.size();
+	Mat shapeDes = Mat::zeros(pointsNum,pointsNum,CV_32FC1);
+	vector<Mat> seqDescriResult;
+	//start n descriptor
+	for(int n = 0 ; n < pointsNum ; n++)
+	{
+		for(int i = 0 ; i < shapeDes.rows ; i++)
+		{
+			for(int j = 0 ; j < shapeDes.cols ; j++)
+			{
+				pi = samplePoints[(i+n)%pointsNum];
+				pj = samplePoints[(j+n)%pointsNum];
+			
+			
+				if(abs(int((i)-(j))) < delta)
+				{
+					shapeDes.at<float>(i,i) = 0;
+				}
+				else 
+				{
+					if(i > j)
+						pjMinusDelta = samplePoints[j+delta];
+					else
+						pjMinusDelta = samplePoints[j-delta];
+
+					tmp = angle(pi, pj, pjMinusDelta);
+					shapeDes.at<float>(i,j) = tmp;
+				}
+			}
+		}
+		seqDescriResult.push_back(shapeDes);
+	}
+
+	return seqDescriResult;
 }
 
 // normalize descriptor into 0~255

@@ -23,7 +23,7 @@ public:
 	vector<Point> sampleResult;
 
 	Mat resultDescri;
-
+	vector<Mat> seqDescri;
 	//Mat grayDescri;
 
 private:
@@ -33,6 +33,7 @@ private:
 	float contourLength(vector<Point> singleContour);
 	vector<Point> getSamplePoints(vector<Point> singleContour);
 	Mat descriptor(vector<Point> samplePoints);
+	vector<Mat> getSeqDescriptor(vector<Point> samplePoints);
 	//void desToGrayImg(Mat input);
 	float angle(Point i, Point j, Point jMinusDelta);
 
