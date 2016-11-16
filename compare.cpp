@@ -18,9 +18,24 @@ using namespace cv;
 // constructor
 comp::comp(Mat descri1, Mat descri2)
 {
+	setScoreThreshold();
 	compareDes(descri1, descri2);
 }
 
+comp::comp(Mat descri1, vector<Mat> descri2Seq)
+{
+	setScoreThreshold();
+	for(int i = 0 ; i < descri2Seq.size() ; i++)
+		compareDes(descri1, descri2Seq[i], i);
+}
+
+//set Score threshold
+void comp::setScoreThreshold()
+{
+	score = 10000000;
+}
+
+//two single image
 void comp::compareDes(Mat input1, Mat input2)
 {
 	
@@ -42,6 +57,7 @@ void comp::compareDes(Mat input1, Mat input2)
 	integral(input1, desInteg1);
 	integral(input2, desInteg2);
 
+	for(int r = rLim ; r < input1.cols/3 ; r++)
 	{
 		for(int i = 0 ; i < input1.cols ; i++)
 		{
@@ -77,14 +93,14 @@ void comp::compareDes(Mat input1, Mat input2)
 			
 				getScore = pow(abs(subSum1[i] - subSum2[j]), 2);
 				getScore /= pow(r, 2);
-				if(getScore < currentScore)
+				if(getScore < score)
 				{
 				 
-					currentScore = getScore;
+					//currentScore = getScore;
 					startIndex1 = i;
 					startIndex2 = j;
 					range = r;
-					score = currentScore;
+					score = getScore;
 				}
 			}
 		}
@@ -123,6 +139,57 @@ void comp::compareDes(Mat input1, Mat input2)
 	score = currentScore;
 	cout << "score: "<<currentScore<<endl;
 	*/
+}
+
+
+//single and a n seq
+void comp::compareDes(Mat input1, Mat input2, int index)
+{
+	Mat sub = input1-input2;
+	Mat integral1; // sum
+	Mat integral2; // square sum
+
+	int rLim = 5; // square size
+	int lefttopPoint1 = 0;
+	int lefttopPoint2 = 0;
+	double tmpSum = 0;
+	double getScore = 0;
+	integral(sub, integral1, integral2);
+	
+
+
+	for(int r = rLim ; r < input1.cols ; r++)
+	{
+		for(int i = 0 ; i < input1.cols ; i++)
+		{
+			if( (i+r) <= input1.cols)
+			{
+				tmpSum = integral2.at<double>(i, i) + integral2.at<double>(i+r, i+r)-integral2.at<double>(i, i+r)-integral2.at<double>(i+r, i);
+			
+			}
+			else
+			{
+				tmpSum += integral2.at<double>(i+r-input1.cols+1, i+r-input1.cols+1); //[y, y]
+				tmpSum += integral2.at<double>(input1.cols-1, input1.cols-1)+integral2.at<double>(i, i)-integral2.at<double>(i, input1.cols-1)-integral2.at<double>(input1.cols-1, i); //[x, x]
+				tmpSum += integral2.at<double>(i+r-input1.cols+1, input1.cols-1)-integral2.at<double>(i+r-input1.cols+1, i); //[y, cols]
+				tmpSum += integral2.at<double>(input1.cols-1, i+r-input1.cols+1)-integral2.at<double>(i, i+r-input1.cols+1); //[cols, y]
+			}
+
+			getScore = tmpSum/pow(r,2);
+
+			if(getScore < score)
+			{
+				r = range;
+				n = index;
+				score = getScore;
+				startIndex1 = i;
+				startIndex2 = i;
+				
+			}
+		}
+	}
+
+
 }
 
 Mat comp::subMatrix(Mat input, int row, int col, int range)
