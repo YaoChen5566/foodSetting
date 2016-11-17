@@ -16,24 +16,35 @@ using namespace std;
 using namespace cv;
 
 // constructor
-comp::comp(Mat descri1, Mat descri2)
+/*comp::comp(Mat descri1, Mat descri2)
 {
 	setScoreThreshold();
 	compareDes(descri1, descri2);
+}*/
+
+comp::comp()
+{
+	_score = 10000000.0;
+
 }
 
 comp::comp(Mat descri1, vector<Mat> descri2Seq)
 {
-	setScoreThreshold();
+	cout <<"GGinin"<<endl;
+	cout << descri2Seq.size()<<endl;
+	_score = 10000000.0;
+	_startIndex1 = 0;
+	_startIndex2 = 0;
+	_range = 0;
+
 	for(int i = 0 ; i < descri2Seq.size() ; i++)
-		compareDes(descri1, descri2Seq[i], i);
+	{
+		cout <<"n: "<<i<<endl;
+		compareDesN(descri1, descri2Seq[i], i);
+	}
 }
 
-//set Score threshold
-void comp::setScoreThreshold()
-{
-	score = 10000000;
-}
+
 
 //two single image
 void comp::compareDes(Mat input1, Mat input2)
@@ -93,14 +104,14 @@ void comp::compareDes(Mat input1, Mat input2)
 			
 				getScore = pow(abs(subSum1[i] - subSum2[j]), 2);
 				getScore /= pow(r, 2);
-				if(getScore < score)
+				if(getScore < _score)
 				{
 				 
 					//currentScore = getScore;
-					startIndex1 = i;
-					startIndex2 = j;
-					range = r;
-					score = getScore;
+					_startIndex1 = i;
+					_startIndex2 = j;
+					_range = r;
+					_score = getScore;
 				}
 			}
 		}
@@ -108,42 +119,11 @@ void comp::compareDes(Mat input1, Mat input2)
 		subSum1.clear();
 		subSum2.clear();
 	}
-
-
-	
-	/*
-	for(int i = 0 ; i < input1.cols ; i++)
-	{
-		for(int j = 0 ; j < input2.cols ; j++)
-		{
-			Mat tmp1 = subMatrix(input1, i, i, r);
-			Mat tmp2 = subMatrix(input2, j, j, r);
-
-			Mat minus;
-			absdiff(tmp1, tmp2, minus);
-			
-			getScore = cv::sum(minus)[0];
-				
-			getScore /= pow(r,2);
-
-			if(getScore < currentScore)
-			{
-				 
-				currentScore = getScore;
-				startIndex1 = i;
-				startIndex2 = j;
-				range = r;
-			}
-		}
-	}
-	score = currentScore;
-	cout << "score: "<<currentScore<<endl;
-	*/
 }
 
 
 //single and a n seq
-void comp::compareDes(Mat input1, Mat input2, int index)
+void comp::compareDesN(Mat input1, Mat input2, int index)
 {
 	Mat sub = input1-input2;
 	Mat integral1; // sum
@@ -177,19 +157,42 @@ void comp::compareDes(Mat input1, Mat input2, int index)
 
 			getScore = tmpSum/pow(r,2);
 
-			if(getScore < score)
+			if(getScore < _score)
 			{
-				r = range;
-				n = index;
-				score = getScore;
-				startIndex1 = i;
-				startIndex2 = i;
+				_range = r;
+				_score = getScore;
+				_startIndex1 = i;
+				_startIndex2 = i+index;
 				
 			}
 		}
 	}
 
 
+}
+
+//range
+int comp::range()
+{
+	return _range;
+}
+
+//start index 1
+int comp::startIndex1()
+{
+	return _startIndex1;
+}
+
+//start index 2
+int comp::startIndex2()
+{
+	return _startIndex2;
+}
+
+//score
+double comp::score()
+{
+	return _score;
 }
 
 Mat comp::subMatrix(Mat input, int row, int col, int range)

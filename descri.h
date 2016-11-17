@@ -20,10 +20,10 @@ public:
 	descri(string &imgPath);
 	descri(vector<Point> contour);
 	
-	vector<Point> sampleResult;
+	vector<Point> sampleResult();
 
-	Mat resultDescri;
-	vector<Mat> seqDescri;
+	Mat resultDescri();
+	vector<Mat> seqDescri();
 	//Mat grayDescri;
 
 private:
@@ -31,10 +31,14 @@ private:
 	Mat alphaBinary(Mat input);
 	int maxContour(vector<vector<Point>> contours);
 	float contourLength(vector<Point> singleContour);
-	vector<Point> getSamplePoints(vector<Point> singleContour);
-	Mat descriptor(vector<Point> samplePoints);
-	vector<Mat> getSeqDescriptor(vector<Point> samplePoints);
+	void getSamplePoints(vector<Point> singleContour);
+	void descriptor(vector<Point> samplePoints);
+	void getSeqDescriptor(vector<Point> samplePoints);
 	//void desToGrayImg(Mat input);
 	float angle(Point i, Point j, Point jMinusDelta);
+	
+	vector<Point> _sampleResult;
+	Mat _resultDescri;
+	vector<Mat> _seqDescri;
 
 };

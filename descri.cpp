@@ -26,10 +26,10 @@ descri::descri(string &imgPath)
 descri::descri(vector<Point> contour)
 {
 	//get sample points: points in vector
-	sampleResult = getSamplePoints(contour);
+	getSamplePoints(contour);
 
 	//get descriptor
-	resultDescri = descriptor(sampleResult);
+	descriptor(_sampleResult);
 	//return grayDescri;
 }
 
@@ -60,11 +60,12 @@ void descri::imgToDes(Mat input)
 	Mat drawing = Mat::zeros( inputCanny.size(),CV_8UC1);
 
 	//get sample points: points in vector
-	sampleResult = getSamplePoints(contours[maxContour(contours)]);
+	getSamplePoints(contours[maxContour(contours)]);
 
 	//get descriptor
-	resultDescri = descriptor(sampleResult);
-	//return grayDescri;
+	descriptor(_sampleResult);
+
+	getSeqDescriptor(_sampleResult);
 }
 
 // alpha to binary
@@ -136,7 +137,7 @@ float descri::contourLength(vector<Point> singleContour)
 }
 
 // return vector of sample point
-vector<Point> descri::getSamplePoints(vector<Point> singleContour)
+void descri::getSamplePoints(vector<Point> singleContour)
 {
 	int pointCount = 100;
 	int totalPoints = singleContour.size();
@@ -162,14 +163,12 @@ vector<Point> descri::getSamplePoints(vector<Point> singleContour)
 
 	for(int i = 0 ; i < pointIndex.size() ; i++)
 	{
-		sampleResult.push_back(singleContour[pointIndex[i]]);
+		_sampleResult.push_back(singleContour[pointIndex[i]]);
 	}
-
-	return sampleResult;
 }
 
 // get descriptor
-Mat descri::descriptor(vector<Point> samplePoints)
+void descri::descriptor(vector<Point> samplePoints)
 {
 	Point pi;
 	Point pj;
@@ -204,11 +203,12 @@ Mat descri::descriptor(vector<Point> samplePoints)
 			}
 		}
 	}
-	return shapeDes;
+	_resultDescri = shapeDes;
+	//return shapeDes;
 }
 
 // get seq descriptor with n start point
-vector<Mat> descri::getSeqDescriptor(vector<Point> samplePoints)
+void descri::getSeqDescriptor(vector<Point> samplePoints)
 {
 	Point pi;
 	Point pj;
@@ -218,7 +218,7 @@ vector<Mat> descri::getSeqDescriptor(vector<Point> samplePoints)
 	float tmp = 0;
 	int pointsNum = samplePoints.size();
 	Mat shapeDes = Mat::zeros(pointsNum,pointsNum,CV_32FC1);
-	vector<Mat> seqDescriResult;
+
 	//start n descriptor
 	for(int n = 0 ; n < pointsNum ; n++)
 	{
@@ -246,13 +246,28 @@ vector<Mat> descri::getSeqDescriptor(vector<Point> samplePoints)
 				}
 			}
 		}
-		seqDescriResult.push_back(shapeDes);
+		_seqDescri.push_back(shapeDes);
 	}
 
-	return seqDescriResult;
 }
 
-// normalize descriptor into 0~255
+// single descriptor
+Mat descri::resultDescri()
+{
+	return _resultDescri;
+}
+
+//sequence descriptor
+vector<Mat> descri::seqDescri()
+{
+	return _seqDescri;
+}
+
+//sample point result
+vector<Point> descri::sampleResult()
+{
+	return _sampleResult;
+}
 
 //void descri::desToGrayImg(Mat input)
 //{
