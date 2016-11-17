@@ -16,35 +16,32 @@ using namespace std;
 using namespace cv;
 
 // constructor
-/*comp::comp(Mat descri1, Mat descri2)
-{
-	setScoreThreshold();
-	compareDes(descri1, descri2);
-}*/
-
 comp::comp()
 {
-	_score = 10000000.0;
+	setInitial();
+}
 
+comp::comp(Mat descri1, Mat descri2)
+{
+	setInitial();
+	compareDes(descri1, descri2);
 }
 
 comp::comp(Mat descri1, vector<Mat> descri2Seq)
 {
-	cout <<"GGinin"<<endl;
-	cout << descri2Seq.size()<<endl;
+	setInitial();
+	for(int i = 0 ; i < descri2Seq.size() ; i++)
+		compareDesN(descri1, descri2Seq[i], i);
+}
+
+//set initial
+void comp::setInitial()
+{
 	_score = 10000000.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
-
-	for(int i = 0 ; i < descri2Seq.size() ; i++)
-	{
-		cout <<"n: "<<i<<endl;
-		compareDesN(descri1, descri2Seq[i], i);
-	}
 }
-
-
 
 //two single image
 void comp::compareDes(Mat input1, Mat input2)

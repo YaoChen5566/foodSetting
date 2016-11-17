@@ -19,6 +19,8 @@ public:
 
 	comp(Mat des1, vector<Mat> des2Seq);
 	comp();
+	comp(Mat des1, Mat des2);
+
 
 	int startIndex1();
 	int startIndex2();
@@ -26,9 +28,9 @@ public:
 	double score();
 	//int n;
 
-	//comp(Mat des1, Mat des2);
-
+	
 private:
+	void setInitial();
 	void setScoreThreshold();
 	void compareDes(Mat input1, Mat input2);
 	void compareDesN(Mat input1, Mat input2, int index);
