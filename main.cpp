@@ -23,42 +23,92 @@ vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
 int getdir(string dir, vector<string> &files);
 
 
+// comparison function object
+bool compareContourSize ( vector<Point> contour1, vector<Point> contour2 ) {
+    double i = contour1.size();
+    double j = contour2.size();
+    return ( i < j );
+}
+
 int main()
 {
 
 
-	//Mat userDraw = imread("inputImg/man.jpg");
-	//Mat userDrawGray;
-	//cvtColor(userDraw, userDrawGray, CV_RGB2GRAY);
-	//Mat userDrawCanny;
+	Mat userDraw = imread("inputImg/man.jpg");
+	Mat userDrawGray;
+	cvtColor(userDraw, userDrawGray, CV_BGR2GRAY);
+	Mat userDrawCanny;
 	//Canny(userDrawGray, userDrawCanny, 50, 150, 3);
-	//vector<vector<Point>> userDrawContours;
-	//vector<Vec4i> hierarchy;
-	//findContours(userDrawCanny, userDrawContours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_NONE, Point(0, 0) );
-	//
+	vector<vector<Point>> userDrawContours;
+	vector<Vec4i> hierarchy;
 
-	//string dir = string("foodImg/");
-	//vector<string> files = vector<string>();
-	//getdir(dir, files);
- // 
-	//Mat drawing = Mat::zeros( userDraw.size(), CV_8UC3 );
-	//drawContours( drawing, userDrawContours, 0 , Scalar(0,0,255), 2, 8, hierarchy, 0, Point() );
+	//test Lab instead of RGB
+	Mat lab;
+	cvtColor(userDraw,lab,CV_BGR2Lab);
+	vector<Mat> channelsL;
+	split(lab, channelsL);
+
+	Mat L = channelsL[0];
+	Mat a = channelsL[1];
+	Mat b = channelsL[2];
+
+	imwrite("__L.png", L);
+	imwrite("__a.png", a);
+	imwrite("__b.png", b);
+
+	Canny(L, userDrawCanny, 50, 150, 3, true);
+
+	// test HSV instead of RGB
+	Mat hsv;
+	cvtColor(userDraw,hsv,CV_BGR2HSV);
+
+	vector<Mat> channels;
+	split(hsv, channels);
+
+	Mat H = channels[0];
+	Mat S = channels[1];
+	Mat V = channels[2];
+
+	imwrite("_H.png", H);
+	imwrite("_S.png", S);
+	imwrite("_V.png", V);
+
+	findContours(userDrawCanny, userDrawContours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0) );
+	
+	sort(userDrawContours.begin(), userDrawContours.end(), compareContourSize);
+
+	string dir = string("foodImg/");
+	vector<string> files = vector<string>();
+	getdir(dir, files);
+  
+	RNG rng(12345);
+	Mat drawing = Mat::zeros( userDraw.size(), CV_8UC3 );
+	for(int i = 0 ; i < userDrawContours.size() ; i++)
+	{
+		cout << userDrawContours[i].size()<<endl;
+		drawContours( drawing, userDrawContours, i ,  Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) ), 2, 8, hierarchy, 0, Point() );
+	}
+	imwrite("canny.png", userDrawCanny);
+	imwrite("contour.png", drawing);
+
+	
 	//for(int i = 0 ; i < 1/*userDrawContours.size()*/ ; i++)
 	//{
 	//	descri descriUser(userDrawContours[i]);
-	//	Mat userDrawDes = descriUser.resultDescri;
+	//	Mat userDrawDes = descriUser.resultDescri();
 	//	
 	//	for(int j = 2 ; j < files.size() ; j++)
 	//	{
+	//		cout << "start "<<j<<endl;
 	//		string foodImg = dir + files[j];
 	//		Mat food = imread(foodImg, -1);
 
 	//		descri desFood(foodImg);
-	//		Mat foodDes = desFood.resultDescri;
+	//		vector<Mat> foodDes = desFood.seqDescri();
 	//		comp compDes(userDrawDes,foodDes);
 
-	//		vector<Point> matchSeq1 = subPointSeq(descriUser.sampleResult, compDes.startIndex1, compDes.range);
-	//		vector<Point> matchSeq2 = subPointSeq(desFood.sampleResult, compDes.startIndex2, compDes.range);
+	//		vector<Point> matchSeq1 = subPointSeq(descriUser.sampleResult(), compDes.startIndex1(), compDes.range());
+	//		vector<Point> matchSeq2 = subPointSeq(desFood.sampleResult(), compDes.startIndex2(), compDes.range());
 
 	//		Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
 	//		//cout <<"type: "<<warpingResult.type()<<endl;
@@ -66,16 +116,16 @@ int main()
 	//		if(warp_mat.size() != cv::Size(0,0))
 	//		{
 	//			cout << "file: "<< files[j]<<endl;
-	//			cout << "score: "<<compDes.score<<endl;;
+	//			cout << "score: "<<compDes.score()<<endl;;
 	//			cout << "scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
 	//			warpAffine(food, userDraw, warp_mat, food.size());
 	//		}
 
 	//	}
 	//}
+	
 
-
-
+/*
 	clock_t start = clock(); // compare start
 	string tmp = "foodImg/085.png";
 	string tmp2 = "foodImg/084.png";
@@ -163,7 +213,7 @@ int main()
 	
 	warpAffine(input2, warpingResult, warp_mat, warpingResult.size());
 	imwrite("warping.png", warpingResult);
-	
+*/
 
 	//waitKey();
 	system("Pause");
