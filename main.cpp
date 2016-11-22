@@ -25,8 +25,8 @@ int getdir(string dir, vector<string> &files);
 
 // comparison function object
 bool compareContourSize ( vector<Point> contour1, vector<Point> contour2 ) {
-    double i = contour1.size();
-    double j = contour2.size();
+	size_t i = contour1.size();
+	size_t j = contour2.size();
     return ( i < j );
 }
 
@@ -35,45 +35,19 @@ int main()
 
 
 	Mat userDraw = imread("inputImg/man.jpg");
+	Mat userDraw2;
+	resize(userDraw, userDraw2, Size(userDraw.cols*2, userDraw.rows*2));
 	Mat userDrawGray;
-	cvtColor(userDraw, userDrawGray, CV_BGR2GRAY);
+	cvtColor(userDraw2, userDrawGray, CV_BGR2GRAY);
 	Mat userDrawCanny;
-	//Canny(userDrawGray, userDrawCanny, 50, 150, 3);
+	Canny(userDrawGray, userDrawCanny, 25, 75, 3);
+	Mat userDrawCannyT;
+	threshold(userDrawCanny,userDrawCannyT,120,255,CV_THRESH_BINARY);
+
 	vector<vector<Point>> userDrawContours;
 	vector<Vec4i> hierarchy;
 
-	//test Lab instead of RGB
-	Mat lab;
-	cvtColor(userDraw,lab,CV_BGR2Lab);
-	vector<Mat> channelsL;
-	split(lab, channelsL);
-
-	Mat L = channelsL[0];
-	Mat a = channelsL[1];
-	Mat b = channelsL[2];
-
-	imwrite("__L.png", L);
-	imwrite("__a.png", a);
-	imwrite("__b.png", b);
-
-	Canny(L, userDrawCanny, 50, 150, 3, true);
-
-	// test HSV instead of RGB
-	Mat hsv;
-	cvtColor(userDraw,hsv,CV_BGR2HSV);
-
-	vector<Mat> channels;
-	split(hsv, channels);
-
-	Mat H = channels[0];
-	Mat S = channels[1];
-	Mat V = channels[2];
-
-	imwrite("_H.png", H);
-	imwrite("_S.png", S);
-	imwrite("_V.png", V);
-
-	findContours(userDrawCanny, userDrawContours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0) );
+	findContours(userDrawCannyT.clone(), userDrawContours,/* hierarchy,*/ CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0) );
 	
 	sort(userDrawContours.begin(), userDrawContours.end(), compareContourSize);
 
@@ -82,12 +56,13 @@ int main()
 	getdir(dir, files);
   
 	RNG rng(12345);
-	Mat drawing = Mat::zeros( userDraw.size(), CV_8UC3 );
+	Mat drawing = Mat::zeros( userDraw2.size(), CV_8UC3 );
 	for(int i = 0 ; i < userDrawContours.size() ; i++)
 	{
 		cout << userDrawContours[i].size()<<endl;
-		drawContours( drawing, userDrawContours, i ,  Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) ), 2, 8, hierarchy, 0, Point() );
+		drawContours( drawing, userDrawContours, i ,  Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) ), 2, 8, hierarchy);
 	}
+
 	imwrite("canny.png", userDrawCanny);
 	imwrite("contour.png", drawing);
 
