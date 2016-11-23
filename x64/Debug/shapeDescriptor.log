@@ -1,4 +1,4 @@
-﻿已經開始建置於 2016/11/22 下午 05:20:05。
+﻿已經開始建置於 2016/11/23 上午 11:32:05。
      1>節點 2 (Build 目標) 上的專案 "F:\food_setting\shapeDescriptor\shapeDescriptor\shapeDescriptor.vcxproj"。
      1>ClCompile:
          F:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W3 /WX- /Od /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug\\" /Fd"x64\Debug\vc110.pdb" /Gd /TP /errorReport:prompt main.cpp
@@ -14,4 +14,4 @@
 
 建置成功。
 
-經過時間 00:00:02.26
+經過時間 00:00:02.38

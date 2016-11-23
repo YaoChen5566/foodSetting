@@ -135,7 +135,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 	
 
 
-	for(int r = rLim ; r < input1.cols ; r++)
+	for(int r = rLim ; r < input1.cols*0.8 ; r++)
 	{
 		for(int i = 0 ; i < input1.cols ; i++)
 		{

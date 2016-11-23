@@ -34,7 +34,7 @@ int main()
 {
 
 
-	Mat userDraw = imread("inputImg/man.jpg");
+	Mat userDraw = imread("inputImg/duck.jpg");
 	Mat userDraw2;
 	resize(userDraw, userDraw2, Size(userDraw.cols*2, userDraw.rows*2));
 	Mat userDrawGray;
@@ -47,7 +47,7 @@ int main()
 	vector<vector<Point>> userDrawContours;
 	vector<Vec4i> hierarchy;
 
-	findContours(userDrawCannyT.clone(), userDrawContours,/* hierarchy,*/ CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0) );
+	findContours(userDrawCannyT.clone(), userDrawContours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0) );
 	
 	sort(userDrawContours.begin(), userDrawContours.end(), compareContourSize);
 
@@ -59,7 +59,6 @@ int main()
 	Mat drawing = Mat::zeros( userDraw2.size(), CV_8UC3 );
 	for(int i = 0 ; i < userDrawContours.size() ; i++)
 	{
-		cout << userDrawContours[i].size()<<endl;
 		drawContours( drawing, userDrawContours, i ,  Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) ), 2, 8, hierarchy);
 	}
 
@@ -67,40 +66,42 @@ int main()
 	imwrite("contour.png", drawing);
 
 	
-	//for(int i = 0 ; i < 1/*userDrawContours.size()*/ ; i++)
+	//for(int i = 0 ; i < userDrawContours.size() ; i++)
 	//{
-	//	descri descriUser(userDrawContours[i]);
-	//	Mat userDrawDes = descriUser.resultDescri();
-	//	
-	//	for(int j = 2 ; j < files.size() ; j++)
+	//	if(userDrawContours[i].size() >= 50)
 	//	{
-	//		cout << "start "<<j<<endl;
-	//		string foodImg = dir + files[j];
-	//		Mat food = imread(foodImg, -1);
-
-	//		descri desFood(foodImg);
-	//		vector<Mat> foodDes = desFood.seqDescri();
-	//		comp compDes(userDrawDes,foodDes);
-
-	//		vector<Point> matchSeq1 = subPointSeq(descriUser.sampleResult(), compDes.startIndex1(), compDes.range());
-	//		vector<Point> matchSeq2 = subPointSeq(desFood.sampleResult(), compDes.startIndex2(), compDes.range());
-
-	//		Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
-	//		//cout <<"type: "<<warpingResult.type()<<endl;
-	//		//cout << warp_mat.size()<<endl;
-	//		if(warp_mat.size() != cv::Size(0,0))
+	//		descri descriUser(userDrawContours[i]);
+	//		Mat userDrawDes = descriUser.resultDescri();
+	//	
+	//		for(int j = 2 ; j < files.size() ; j++)
 	//		{
-	//			cout << "file: "<< files[j]<<endl;
-	//			cout << "score: "<<compDes.score()<<endl;;
-	//			cout << "scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
-	//			warpAffine(food, userDraw, warp_mat, food.size());
-	//		}
+	//			string foodImg = dir + files[j];
+	//			Mat food = imread(foodImg, -1);
 
+	//			descri desFood(foodImg);
+	//			vector<Mat> foodDes = desFood.seqDescri();
+	//			comp compDes(userDrawDes,foodDes);
+
+	//			vector<Point> matchSeq1 = subPointSeq(descriUser.sampleResult(), compDes.startIndex1(), compDes.range());
+	//			vector<Point> matchSeq2 = subPointSeq(desFood.sampleResult(), compDes.startIndex2(), compDes.range());
+
+	//			Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
+	//			//cout <<"type: "<<warpingResult.type()<<endl;
+	//			//cout << warp_mat.size()<<endl;
+	//			if(warp_mat.size() != cv::Size(0,0))
+	//			{
+	//				cout << "file: "<< files[j]<<endl;
+	//				cout << "score: "<<compDes.score()<<endl;;
+	//				cout << "scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
+	//				warpAffine(food, userDraw, warp_mat, food.size());
+	//			}
+
+	//		}
 	//	}
 	//}
-	
 
-/*
+
+	/*
 	clock_t start = clock(); // compare start
 	string tmp = "foodImg/085.png";
 	string tmp2 = "foodImg/084.png";
@@ -188,7 +189,7 @@ int main()
 	
 	warpAffine(input2, warpingResult, warp_mat, warpingResult.size());
 	imwrite("warping.png", warpingResult);
-*/
+	*/
 
 	//waitKey();
 	system("Pause");
