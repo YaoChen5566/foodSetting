@@ -32,9 +32,8 @@ bool compareContourSize ( vector<Point> contour1, vector<Point> contour2 ) {
 
 int main()
 {
-
-
-	Mat userDraw = imread("inputImg/duck.jpg");
+	
+	Mat userDraw = imread("inputImg/man.jpg");
 	Mat userDraw2;
 	resize(userDraw, userDraw2, Size(userDraw.cols*2, userDraw.rows*2));
 	Mat userDrawGray;
@@ -44,10 +43,49 @@ int main()
 	Mat userDrawCannyT;
 	threshold(userDrawCanny,userDrawCannyT,120,255,CV_THRESH_BINARY);
 
+
+	//cout << userDraw.type();
+	Mat userDrawFloat;
+	userDraw.convertTo(userDrawFloat, CV_32FC3);
+	imwrite("float.png", userDrawFloat);
+	//userDraw.convertTo(userDrawFloat, CV_32FC3);
+	//Mat userDrawRe = userDraw.reshape((userDraw.rows * userDraw.cols, 1));
+
+
+
+	//cout << "1";
+	vector<Mat> channels;
+	split(userDraw, channels);
+
+	Mat B = channels[0];
+	Mat G = channels[1];
+	Mat R = channels[2];
+
+	Mat cannyB, cannyG, cannyR;
+
+	Canny(B, cannyB, 50, 150, 3);
+	Canny(G, cannyG, 50, 150, 3);
+	Canny(R, cannyR, 50, 150, 3);
+
+	Mat cannyColor;
+
+	bitwise_or(cannyB, cannyG, cannyColor);
+	bitwise_or(cannyColor, cannyR, cannyColor);
+
+
+	//for(int i = 0 ; i < userDraw.cols ; i++)
+	//{
+	//	for(int j = 0 ; j < userDraw.rows ; j++)
+	//	{
+	//		cout <<"B: "<<B.at<uchar>(j, i)<<" , G: "<<G.at<uchar>(j, i)<<" , R: "<<R.at<uchar>(j, i)<<endl;
+	//		inputSpace[B.at<uchar>(j, i)][G.at<uchar>(j, i)][R.at<uchar>(j, i)] += 1;
+	//	}
+	//}
+
 	vector<vector<Point>> userDrawContours;
 	vector<Vec4i> hierarchy;
 
-	findContours(userDrawCannyT.clone(), userDrawContours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0) );
+	findContours(cannyColor.clone(), userDrawContours, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE, Point(0, 0) );
 	
 	sort(userDrawContours.begin(), userDrawContours.end(), compareContourSize);
 
@@ -56,7 +94,7 @@ int main()
 	getdir(dir, files);
   
 	RNG rng(12345);
-	Mat drawing = Mat::zeros( userDraw2.size(), CV_8UC3 );
+	Mat drawing = Mat::zeros( userDraw.size(), CV_8UC3 );
 	for(int i = 0 ; i < userDrawContours.size() ; i++)
 	{
 		drawContours( drawing, userDrawContours, i ,  Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) ), 2, 8, hierarchy);
@@ -64,7 +102,7 @@ int main()
 
 	imwrite("canny.png", userDrawCanny);
 	imwrite("contour.png", drawing);
-
+	
 	
 	//for(int i = 0 ; i < userDrawContours.size() ; i++)
 	//{
@@ -100,8 +138,8 @@ int main()
 	//	}
 	//}
 
-
 	/*
+	
 	clock_t start = clock(); // compare start
 	string tmp = "foodImg/085.png";
 	string tmp2 = "foodImg/084.png";

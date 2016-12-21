@@ -1,11 +1,28 @@
-﻿已經開始建置於 2016/9/13 下午 12:58:51。
+﻿已經開始建置於 2016/11/29 下午 12:44:47。
      1>節點 2 (Build 目標) 上的專案 "F:\food_setting\shapeDescriptor\shapeDescriptor\shapeDescriptor.vcxproj"。
      1>ClCompile:
-         F:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Release\\" /Fd"x64\Release\vc110.pdb" /Gd /TP /errorReport:prompt main.cpp
-         main.cpp
-     1>main.cpp(1): fatal error C1083: 無法開啟包含檔案: 'opencv\cv.h': No such file or directory
-     1>專案 "F:\food_setting\shapeDescriptor\shapeDescriptor\shapeDescriptor.vcxproj" (Build 目標) 建置完成 -- 失敗。
+         F:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Release\\" /Fd"x64\Release\vc110.pdb" /Gd /TP /errorReport:prompt descri.cpp
+         descri.cpp
+     1>c:\opencv\build\include\opencv2\flann\dist.h : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
+     1>C:\opencv\build\include\opencv2/legacy/compat.hpp : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
+     1>descri.cpp(130): warning C4244: '+=' : 將 'double' 轉換為 'float'，由於型別不同，可能導致資料遺失
+     1>descri.cpp(143): warning C4267: '正在初始化' : 將 'size_t' 轉換為 'int'，資料可能遺失
+     1>descri.cpp(147): warning C4267: '正在初始化' : 將 'size_t' 轉換為 'int'，資料可能遺失
+     1>descri.cpp(179): warning C4267: '正在初始化' : 將 'size_t' 轉換為 'int'，資料可能遺失
+     1>descri.cpp(219): warning C4267: '正在初始化' : 將 'size_t' 轉換為 'int'，資料可能遺失
+     1>descri.cpp(322): warning C4244: '=' : 將 'double' 轉換為 'float'，由於型別不同，可能導致資料遺失
+     1>descri.cpp(323): warning C4244: '=' : 將 'double' 轉換為 'float'，由於型別不同，可能導致資料遺失
+     1>descri.cpp(324): warning C4244: '=' : 將 'double' 轉換為 'float'，由於型別不同，可能導致資料遺失
+     1>descri.cpp(336): warning C4244: '=' : 將 'double' 轉換為 'float'，由於型別不同，可能導致資料遺失
+       Link:
+         F:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"F:\food_setting\shapeDescriptor\x64\Release\shapeDescriptor.exe" /NOLOGO opencv_core247.lib opencv_imgproc247.lib opencv_highgui247.lib opencv_ml247.lib opencv_video247.lib opencv_features2d247.lib opencv_calib3d247.lib opencv_objdetect247.lib opencv_contrib247.lib opencv_legacy247.lib opencv_flann247.lib opencv_nonfree247.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"F:\food_setting\shapeDescriptor\x64\Release\shapeDescriptor.pdb" /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:\food_setting\shapeDescriptor\x64\Release\shapeDescriptor.lib" /MACHINE:X64 x64\Release\compare.obj
+         x64\Release\descri.obj
+         x64\Release\main.obj
+         正在產生程式碼
+         已完成程式碼產生
+         shapeDescriptor.vcxproj -> F:\food_setting\shapeDescriptor\x64\Release\shapeDescriptor.exe
+     1>專案 "F:\food_setting\shapeDescriptor\shapeDescriptor\shapeDescriptor.vcxproj" (Build 目標) 建置完成。
 
-建置失敗。
+建置成功。
 
-經過時間 00:00:00.19
+經過時間 00:00:02.28
