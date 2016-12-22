@@ -9,6 +9,7 @@
 #include <algorithm>
 
 #include "compare.h"
+#include "fragment.h"
 
 # define PI 3.1415926
 
@@ -37,7 +38,7 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq)
 //set initial
 void comp::setInitial()
 {
-	_score = 10000000.0;
+	_thresholdScore = 10.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
@@ -50,7 +51,7 @@ void comp::compareDes(Mat input1, Mat input2)
 	int rLim = 5; // square size
 	int lefttopPoint1 = 0;
 	int lefttopPoint2 = 0;
-	float currentScore = 10000000;
+	//float currentScore = 0;
 	
 	vector <double> subSum1;
 	vector <double> subSum2;
@@ -154,12 +155,16 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 
 			getScore = tmpSum/pow(r,2);
 
-			if(getScore < _score)
+			if(getScore < _thresholdScore)
 			{
 				_range = r;
 				_score = getScore;
 				_startIndex1 = i;
 				_startIndex2 = i+index;
+
+				frag fragment(i, i+index, r);
+
+				_frag.push_back(fragment);
 				
 			}
 		}
@@ -190,6 +195,13 @@ int comp::startIndex2()
 double comp::score()
 {
 	return _score;
+}
+
+// return a set of fragment
+
+vector<frag> comp::fragList()
+{
+	return _frag;
 }
 
 Mat comp::subMatrix(Mat input, int row, int col, int range)

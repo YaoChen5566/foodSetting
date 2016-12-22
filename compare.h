@@ -8,6 +8,8 @@
 #include <vector>
 #include <algorithm>
 
+#include "fragment.h"
+
 # define PI 3.1415926
 
 using namespace std;
@@ -21,6 +23,10 @@ public:
 	comp();
 	comp(Mat des1, Mat des2);
 
+
+	//frag fragment(int rS, int qS, int mL);
+
+	vector<frag> fragList();
 
 	int startIndex1();
 	int startIndex2();
@@ -39,5 +45,7 @@ private:
 	int _startIndex1;
 	int _startIndex2;
 	int _range;
+	double _thresholdScore;
 	double _score;
+	vector<frag> _frag;
 };
