@@ -35,6 +35,7 @@ public:
 	//int n;
 
 	
+	
 private:
 	void setInitial();
 	void setScoreThreshold();
@@ -48,4 +49,6 @@ private:
 	double _thresholdScore;
 	double _score;
 	vector<frag> _frag;
+
+	bool fragExist(frag newFrag);
 };

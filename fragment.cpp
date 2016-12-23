@@ -15,3 +15,13 @@ void frag::setInfo(int rS, int qS, int mL)
 	q = qS;
 	l = mL;
 }
+
+bool frag::theSame(frag A)
+{
+	if(q == A.q && r == A.r)
+		return true;
+	else if(abs(q-r) == abs(A.q-A.r))
+		return true;
+	else
+		return false;
+}

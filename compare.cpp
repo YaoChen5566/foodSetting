@@ -136,7 +136,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 	
 
 
-	for(int r = rLim ; r < input1.cols*0.8 ; r++)
+	for(int r = input1.cols*0.8 ; r > rLim ; r--)
 	{
 		for(int i = 0 ; i < input1.cols ; i++)
 		{
@@ -164,7 +164,8 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 
 				frag fragment(i, i+index, r);
 
-				_frag.push_back(fragment);
+				if(!fragExist(fragment))
+					_frag.push_back(fragment);
 				
 			}
 		}
@@ -198,10 +199,23 @@ double comp::score()
 }
 
 // return a set of fragment
-
 vector<frag> comp::fragList()
 {
 	return _frag;
+}
+
+// check if the same frag in the vector
+bool comp::fragExist(frag newFrag)
+{
+	bool exist = false;
+
+	for(vector<frag>::iterator i = _frag.begin() ; i != _frag.end() ; i++)
+	{
+		if(newFrag.theSame(*i))
+			exist = true;
+	}
+
+	return exist;
 }
 
 Mat comp::subMatrix(Mat input, int row, int col, int range)

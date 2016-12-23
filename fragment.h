@@ -19,7 +19,7 @@ public:
 	int l; // match length
 
 	
-	
+	bool theSame(frag A);
 private:
 
 	void setInfo(int rS, int qS, int mL);
