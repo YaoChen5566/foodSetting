@@ -34,7 +34,7 @@ bool compareContourSize ( vector<Point> contour1, vector<Point> contour2 ) {
 int main()
 {
 	
-	Mat userDraw = imread("inputImg/man.jpg");
+	Mat userDraw = imread("inputImg/rabbit.jpg");
 	Mat userDraw2;
 	resize(userDraw, userDraw2, Size(userDraw.cols*2, userDraw.rows*2));
 	Mat userDrawGray;
@@ -86,80 +86,88 @@ int main()
 	vector<vector<Point>> userDrawContours;
 	vector<Vec4i> hierarchy;
 
-	findContours(cannyColor.clone(), userDrawContours, CV_RETR_LIST, CV_CHAIN_APPROX_NONE, Point(0, 0) );
+	findContours(cannyColor.clone(), userDrawContours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0) );
 	
-	sort(userDrawContours.begin(), userDrawContours.end(), compareContourSize);
+	//sort(userDrawContours.begin(), userDrawContours.end(), compareContourSize);
 
 	string dir = string("foodImg/");
 	vector<string> files = vector<string>();
 	getdir(dir, files);
   
-	RNG rng(12345);
-	Mat drawing = Mat::zeros( userDraw.size(), CV_8UC3 );
+	vector<vector<Point>> disjointContour;
+
 	for(int i = 0 ; i < userDrawContours.size() ; i++)
 	{
-		//cout << userDrawContours[i].size()<<endl;;
-		drawContours( drawing, userDrawContours, i ,  Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) ), 2, 8, hierarchy);
+		if(userDrawContours[i].size()>50 && hierarchy[i][3] != -1)
+			disjointContour.push_back(userDrawContours[i]);
 	}
 
-	imwrite("canny.png", userDrawCanny);
+	RNG rng(12345);
+	Mat drawing = Mat::zeros( userDraw.size(), CV_8UC3 );
+	for(int i = 0 ; i < disjointContour.size() ; i++)
+	{
+		//cout << userDrawContours[i].size()<<endl;;
+		drawContours( drawing, disjointContour, i ,  Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) ), 2, 8);
+	}
+
+	imwrite("canny.png", cannyColor);
 	imwrite("contour.png", drawing);
 	
 	
-	for(int i = 0 ; i < userDrawContours.size() ; i++)
-	{
-		if(userDrawContours[i].size() >= 50)
-		{
-			descri descriUser(userDrawContours[i]);
-			Mat userDrawDes = descriUser.resultDescri();
-		
-			for(int j = 2 ; j < files.size() ; j++)
-			{
-				string foodImg = dir + files[j];
-				Mat food = imread(foodImg, -1);
+	//for(int i = 0 ; i < userDrawContours.size() ; i++)
+	//{
+	//	if(userDrawContours[i].size() >= 50)
+	//	{
+	//		descri descriUser(userDrawContours[i]);
+	//		Mat userDrawDes = descriUser.resultDescri();
+	//	
+	//		for(int j = 2 ; j < files.size() ; j++)
+	//		{
+	//			string foodImg = dir + files[j];
+	//			Mat food = imread(foodImg, -1);
 
-				descri desFood(foodImg);
-				vector<Mat> foodDes = desFood.seqDescri();
+	//			descri desFood(foodImg);
+	//			vector<Mat> foodDes = desFood.seqDescri();
 
-				comp compDes(userDrawDes,foodDes);
+	//			comp compDes(userDrawDes,foodDes);
 
-				vector<frag> compFragList = compDes.fragList();
+	//			vector<frag> compFragList = compDes.fragList();
 
-				if(compFragList.size() > 0)
-				{
-					for(int i = 0 ; i < compFragList.size() ; i++)
-					{
-						vector<Point> matchSeqR = subPointSeq(descriUser.sampleResult(), compFragList[i].r, compFragList[i].l);
-						vector<Point> matchSeqQ = subPointSeq(desFood.sampleResult(), compFragList[i].q, compFragList[i].l);
+	//			if(compFragList.size() > 0)
+	//			{
+	//				for(int i = 0 ; i < compFragList.size() ; i++)
+	//				{
+	//					vector<Point> matchSeqR = subPointSeq(descriUser.sampleResult(), compFragList[i].r, compFragList[i].l);
+	//					vector<Point> matchSeqQ = subPointSeq(desFood.sampleResult(), compFragList[i].q, compFragList[i].l);
 
-						Mat warpMat = estimateRigidTransform(matchSeqQ, matchSeqR, false); // (src/query, dst/reference)
+	//					Mat warpMat = estimateRigidTransform(matchSeqQ, matchSeqR, false); // (src/query, dst/reference)
 
-						if(warpMat.size() != cv::Size(0, 0))
-						{
-							cout << "file: "<<files[j]<<endl;
-							cout << "match length: "<<compFragList[i].l<<endl;
-							cout << "scale: "<< pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2)<<endl;
-						}
-					}
-				}
+	//					if(warpMat.size() != cv::Size(0, 0))
+	//					{
+	//						cout << "file: "<<files[j]<<endl;
+	//						cout << "match length: "<<compFragList[i].l<<endl;
+	//						cout << "scale: "<< pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2)<<endl;
+	//					}
+	//				}
+	//			}
 
-				//vector<Point> matchSeq1 = subPointSeq(descriUser.sampleResult(), compDes.startIndex1(), compDes.range());
-				//vector<Point> matchSeq2 = subPointSeq(desFood.sampleResult(), compDes.startIndex2(), compDes.range());
+	//			//vector<Point> matchSeq1 = subPointSeq(descriUser.sampleResult(), compDes.startIndex1(), compDes.range());
+	//			//vector<Point> matchSeq2 = subPointSeq(desFood.sampleResult(), compDes.startIndex2(), compDes.range());
 
-				//Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
-				////cout <<"type: "<<warpingResult.type()<<endl;
-				////cout << warp_mat.size()<<endl;
-				//if(warp_mat.size() != cv::Size(0,0))
-				//{
-				//	cout << "file: "<< files[j]<<endl;
-				//	cout << "score: "<<compDes.score()<<endl;;
-				//	cout << "scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
-				//	warpAffine(food, userDraw, warp_mat, food.size());
-				//}
+	//			//Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
+	//			////cout <<"type: "<<warpingResult.type()<<endl;
+	//			////cout << warp_mat.size()<<endl;
+	//			//if(warp_mat.size() != cv::Size(0,0))
+	//			//{
+	//			//	cout << "file: "<< files[j]<<endl;
+	//			//	cout << "score: "<<compDes.score()<<endl;;
+	//			//	cout << "scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
+	//			//	warpAffine(food, userDraw, warp_mat, food.size());
+	//			//}
 
-			}
-		}
-	}
+	//		}
+	//	}
+	//}
 
 	/*
 	
