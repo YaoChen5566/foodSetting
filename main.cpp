@@ -19,8 +19,8 @@
 using namespace std;
 using namespace cv;
 
-
-vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
+//
+//vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
 int getdir(string dir, vector<string> &files);
 
 
@@ -114,60 +114,61 @@ int main()
 	imwrite("contour.png", drawing);
 	
 	
-	//for(int i = 0 ; i < userDrawContours.size() ; i++)
-	//{
-	//	if(userDrawContours[i].size() >= 50)
-	//	{
-	//		descri descriUser(userDrawContours[i]);
-	//		Mat userDrawDes = descriUser.resultDescri();
-	//	
-	//		for(int j = 2 ; j < files.size() ; j++)
-	//		{
-	//			string foodImg = dir + files[j];
-	//			Mat food = imread(foodImg, -1);
+	for(int i = 0 ; i < disjointContour.size() ; i++)
+	{
+		
+		descri descriUser(userDrawContours[i]);
+		Mat userDrawDes = descriUser.resultDescri();
+		
+		for(int j = 2 ; j < files.size() ; j++)
+		{
+			string foodImg = dir + files[j];
+			Mat food = imread(foodImg, -1);
 
-	//			descri desFood(foodImg);
-	//			vector<Mat> foodDes = desFood.seqDescri();
+			descri desFood(foodImg);
+			vector<Mat> foodDes = desFood.seqDescri();
 
-	//			comp compDes(userDrawDes,foodDes);
+			comp compDes(userDrawDes,foodDes, descriUser.sampleResult(), desFood.sampleResult());
 
-	//			vector<frag> compFragList = compDes.fragList();
+			vector<frag> compFragList = compDes.fragList();
 
-	//			if(compFragList.size() > 0)
-	//			{
-	//				for(int i = 0 ; i < compFragList.size() ; i++)
-	//				{
-	//					vector<Point> matchSeqR = subPointSeq(descriUser.sampleResult(), compFragList[i].r, compFragList[i].l);
-	//					vector<Point> matchSeqQ = subPointSeq(desFood.sampleResult(), compFragList[i].q, compFragList[i].l);
+			if(compFragList.size() > 0)
+			{
+				for(int k = 0 ; k < compFragList.size() ; k++)
+				{
+					cout <<"file: "<<files[j]<<endl;
+					cout <<"match length: "<<compFragList[k].l<<endl;
+					//vector<Point> matchSeqR = subPointSeq(descriUser.sampleResult(), compFragList[i].r, compFragList[i].l);
+					//vector<Point> matchSeqQ = subPointSeq(desFood.sampleResult(), compFragList[i].q, compFragList[i].l);
 
-	//					Mat warpMat = estimateRigidTransform(matchSeqQ, matchSeqR, false); // (src/query, dst/reference)
+					//Mat warpMat = estimateRigidTransform(matchSeqQ, matchSeqR, false); // (src/query, dst/reference)
 
-	//					if(warpMat.size() != cv::Size(0, 0))
-	//					{
-	//						cout << "file: "<<files[j]<<endl;
-	//						cout << "match length: "<<compFragList[i].l<<endl;
-	//						cout << "scale: "<< pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2)<<endl;
-	//					}
-	//				}
-	//			}
+					//if(warpMat.size() != cv::Size(0, 0))
+					//{
+					//	cout << "file: "<<files[j]<<endl;
+					//	cout << "match length: "<<compFragList[i].l<<endl;
+					//	cout << "scale: "<< pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2)<<endl;
+					//}
+				}
+			}
 
-	//			//vector<Point> matchSeq1 = subPointSeq(descriUser.sampleResult(), compDes.startIndex1(), compDes.range());
-	//			//vector<Point> matchSeq2 = subPointSeq(desFood.sampleResult(), compDes.startIndex2(), compDes.range());
+			//vector<Point> matchSeq1 = subPointSeq(descriUser.sampleResult(), compDes.startIndex1(), compDes.range());
+			//vector<Point> matchSeq2 = subPointSeq(desFood.sampleResult(), compDes.startIndex2(), compDes.range());
 
-	//			//Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
-	//			////cout <<"type: "<<warpingResult.type()<<endl;
-	//			////cout << warp_mat.size()<<endl;
-	//			//if(warp_mat.size() != cv::Size(0,0))
-	//			//{
-	//			//	cout << "file: "<< files[j]<<endl;
-	//			//	cout << "score: "<<compDes.score()<<endl;;
-	//			//	cout << "scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
-	//			//	warpAffine(food, userDraw, warp_mat, food.size());
-	//			//}
+			//Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
+			////cout <<"type: "<<warpingResult.type()<<endl;
+			////cout << warp_mat.size()<<endl;
+			//if(warp_mat.size() != cv::Size(0,0))
+			//{
+			//	cout << "file: "<< files[j]<<endl;
+			//	cout << "score: "<<compDes.score()<<endl;;
+			//	cout << "scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
+			//	warpAffine(food, userDraw, warp_mat, food.size());
+			//}
 
-	//		}
-	//	}
-	//}
+		}
+		
+	}
 
 	/*
 	
@@ -265,16 +266,16 @@ int main()
 }
 
 //get subPointSeq
-vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range)
-{
-	vector<Point> result;
-
-	for(int i = 0 ; i < range ; i++)
-	{
-		result.push_back(inputSeq[(startIndex+i)%inputSeq.size()]);
-	}
-	return result;
-}
+//vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range)
+//{
+//	vector<Point> result;
+//
+//	for(int i = 0 ; i < range ; i++)
+//	{
+//		result.push_back(inputSeq[(startIndex+i)%inputSeq.size()]);
+//	}
+//	return result;
+//}
 
 int getdir(string dir, vector<string> &files)
 {

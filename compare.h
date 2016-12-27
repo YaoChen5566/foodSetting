@@ -22,7 +22,7 @@ public:
 	comp(Mat des1, vector<Mat> des2Seq);
 	comp();
 	comp(Mat des1, Mat des2);
-
+	comp(Mat des1, vector<Mat> des2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2);
 
 	//frag fragment(int rS, int qS, int mL);
 
@@ -42,6 +42,8 @@ private:
 	void compareDes(Mat input1, Mat input2);
 	void compareDesN(Mat input1, Mat input2, int index);
 	Mat subMatrix(Mat input, int row, int col, int range);
+	vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int matchL);
+
 
 	int _startIndex1;
 	int _startIndex2;
@@ -49,6 +51,8 @@ private:
 	double _thresholdScore;
 	double _score;
 	vector<frag> _frag;
+	vector<Point> _pointSeq1;
+	vector<Point> _pointSeq2;
 
 	bool fragExist(frag newFrag);
 };

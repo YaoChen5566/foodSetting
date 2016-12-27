@@ -35,10 +35,19 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq)
 		compareDesN(descri1, descri2Seq[i], i);
 }
 
+comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2)
+{
+	setInitial();
+	_pointSeq1 = pointSeq1;
+	_pointSeq2 = pointSeq2;
+	for(int i = 0 ; i < descri2Seq.size() ; i++)
+		compareDesN(descri1, descri2Seq[i], i);
+}
+
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 10.0;
+	_thresholdScore = 1.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
@@ -119,7 +128,6 @@ void comp::compareDes(Mat input1, Mat input2)
 	}
 }
 
-
 //single and a n seq
 void comp::compareDesN(Mat input1, Mat input2, int index)
 {
@@ -162,11 +170,26 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 				_startIndex1 = i;
 				_startIndex2 = i+index;
 
-				frag fragment(i, i+index, r);
+				// calculate the warping matrix
+				vector<Point> matchSeqR = subPointSeq(_pointSeq1, _startIndex1, _range);
+				vector<Point> matchSeqQ = subPointSeq(_pointSeq2, _startIndex2, _range);
 
-				if(!fragExist(fragment))
-					_frag.push_back(fragment);
-				
+				Mat warpMat = estimateRigidTransform(matchSeqQ, matchSeqR, false); // (src/query, dst/reference)
+
+
+
+				// use scale and whether generate the warping matrix to judge the fragment probablity
+				if(warpMat.size() != cv::Size(0, 0))
+				{
+					double scale = pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2);
+					if (abs(scale-1.0) < 0.1)
+					{
+						frag fragment(i, i+index, r);
+					
+						if(!fragExist(fragment))
+							_frag.push_back(fragment);
+					}
+				}
 			}
 		}
 	}
@@ -218,6 +241,7 @@ bool comp::fragExist(frag newFrag)
 	return exist;
 }
 
+// get submatrix
 Mat comp::subMatrix(Mat input, int row, int col, int range)
 {
 	Mat subM = Mat::zeros(range, range, CV_32FC1);
@@ -229,5 +253,17 @@ Mat comp::subMatrix(Mat input, int row, int col, int range)
 		}
 	}
 	return subM;
+}
+
+// get sub point sequence
+vector<Point> comp::subPointSeq(vector<Point> inputSeq, int startIndex, int matchL)
+{
+	vector<Point> result;
+
+	for(int i = 0 ; i < matchL ; i++)
+	{
+		result.push_back(inputSeq[(startIndex+i)%inputSeq.size()]);
+	}
+	return result;
 }
 
