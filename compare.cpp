@@ -7,9 +7,10 @@
 #include <stdio.h>
 #include <vector>
 #include <algorithm>
+#include <map>
 
 #include "compare.h"
-#include "fragment.h"
+//#include "fragment.h"
 
 # define PI 3.1415926
 
@@ -47,7 +48,7 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 1.0;
+	_thresholdScore = 10.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
@@ -135,7 +136,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 	Mat integral1; // sum
 	Mat integral2; // square sum
 
-	int rLim = 5; // square size
+	int rLim = 0.1*input1.cols; // square size
 	int lefttopPoint1 = 0;
 	int lefttopPoint2 = 0;
 	double tmpSum = 0;
@@ -144,7 +145,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 	
 
 
-	for(int r = input1.cols*0.8 ; r > rLim ; r--)
+	for(int r = input1.cols ; r > rLim ; r--)
 	{
 		for(int i = 0 ; i < input1.cols ; i++)
 		{
@@ -182,9 +183,13 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 				if(warpMat.size() != cv::Size(0, 0))
 				{
 					double scale = pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2);
-					if (abs(scale-1.0) < 0.1)
+					if (abs(scale-1.0) < 5)
 					{
-						frag fragment(i, i+index, r);
+						map<string, int> fragment;
+
+						fragment["r"] = _startIndex1;
+						fragment["q"] = _startIndex2;
+						fragment["l"] = _range;
 					
 						if(!fragExist(fragment))
 							_frag.push_back(fragment);
@@ -222,23 +227,34 @@ double comp::score()
 }
 
 // return a set of fragment
-vector<frag> comp::fragList()
+vector<map<string, int>> comp::fragList()
 {
 	return _frag;
 }
 
 // check if the same frag in the vector
-bool comp::fragExist(frag newFrag)
+bool comp::fragExist(map<string, int> newFrag)
 {
 	bool exist = false;
 
-	for(vector<frag>::iterator i = _frag.begin() ; i != _frag.end() ; i++)
+	for(vector<map<string, int>>::iterator i = _frag.begin() ; i != _frag.end() ; i++)
 	{
-		if(newFrag.theSame(*i))
+		if(fragSame(newFrag, *i))
 			exist = true;
 	}
 
 	return exist;
+}
+
+//check two fragment the same
+bool comp::fragSame(map<string, int> frag1, map<string, int> frag2)
+{
+	if(frag1["r"] == frag2["r"] && frag1["q"] == frag2["q"])
+		return true;
+	else if(frag1["r"]-frag2["r"] == frag1["q"]-frag2["q"])
+		return true;
+	else
+		return false;
 }
 
 // get submatrix

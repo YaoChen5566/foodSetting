@@ -127,13 +127,14 @@
   <ItemGroup>
     <ClCompile Include="compare.cpp" />
     <ClCompile Include="descri.cpp" />
-    <ClCompile Include="fragment.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="compare.h" />
     <ClInclude Include="descri.h" />
-    <ClInclude Include="fragment.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="tree.hh" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

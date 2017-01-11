@@ -9,10 +9,13 @@
 #include <algorithm>
 #include <dirent.h>
 #include <errno.h>
+#include <map>
+
+#include "tree.hh"
 
 #include "descri.h"
 #include "compare.h"
-#include "fragment.h"
+//#include "fragment.h"
 
 # define PI 3.1415926
 
@@ -28,12 +31,38 @@ int getdir(string dir, vector<string> &files);
 bool compareContourSize ( vector<Point> contour1, vector<Point> contour2 ) {
 	size_t i = contour1.size();
 	size_t j = contour2.size();
-    return ( i < j );
+    return ( i > j );
 }
+
+struct fragm 
+{  
+   map<string, int> Element;  
+}; 
+
+struct fragCanList
+{
+	vector<map<string, int>> Element;
+};
+
+struct foodFragList
+{
+	map<string, fragCanList> Element;
+};
+
+struct contourList
+{
+	map<int, foodFragList> Element;
+};
 
 int main()
 {
 	
+	//fragm test;
+	//test["FF"] = 1;
+
+	//map<string, int> ttt;
+	//ttt["FF"] = 1;
+
 	Mat userDraw = imread("inputImg/rabbit.jpg");
 	Mat userDraw2;
 	resize(userDraw, userDraw2, Size(userDraw.cols*2, userDraw.rows*2));
@@ -88,8 +117,7 @@ int main()
 
 	findContours(cannyColor.clone(), userDrawContours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0) );
 	
-	//sort(userDrawContours.begin(), userDrawContours.end(), compareContourSize);
-
+	
 	string dir = string("foodImg/");
 	vector<string> files = vector<string>();
 	getdir(dir, files);
@@ -102,18 +130,27 @@ int main()
 			disjointContour.push_back(userDrawContours[i]);
 	}
 
+	sort(disjointContour.begin(), disjointContour.end(), compareContourSize);
+
+
+	
+
+
 	RNG rng(12345);
 	Mat drawing = Mat::zeros( userDraw.size(), CV_8UC3 );
 	for(int i = 0 ; i < disjointContour.size() ; i++)
 	{
-		//cout << userDrawContours[i].size()<<endl;;
+		cout << disjointContour[i].size()<<endl;;
 		drawContours( drawing, disjointContour, i ,  Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) ), 2, 8);
 	}
 
 	imwrite("canny.png", cannyColor);
 	imwrite("contour.png", drawing);
 	
-	
+
+	contourList contourCandidate; // key: contour index, value: map within the information of file and fragment
+	foodFragList fileFragment; //key: file, value: vector of fragment
+
 	for(int i = 0 ; i < disjointContour.size() ; i++)
 	{
 		
@@ -130,45 +167,50 @@ int main()
 
 			comp compDes(userDrawDes,foodDes, descriUser.sampleResult(), desFood.sampleResult());
 
-			vector<frag> compFragList = compDes.fragList();
+			fragCanList compFragList;
+			compFragList.Element = compDes.fragList();
 
-			if(compFragList.size() > 0)
+			cout <<"file: "<<files[j]<<endl;
+			fileFragment.Element[foodImg] = compFragList;
+			if(compFragList.Element.size() > 0)
 			{
-				for(int k = 0 ; k < compFragList.size() ; k++)
+
+				for(int k = 0 ; k < compFragList.Element.size() ; k++)
 				{
-					cout <<"file: "<<files[j]<<endl;
-					cout <<"match length: "<<compFragList[k].l<<endl;
-					//vector<Point> matchSeqR = subPointSeq(descriUser.sampleResult(), compFragList[i].r, compFragList[i].l);
-					//vector<Point> matchSeqQ = subPointSeq(desFood.sampleResult(), compFragList[i].q, compFragList[i].l);
+					//cout <<"file: "<<files[j]<<endl;
+					cout <<"reference index: "<<compFragList.Element[k]["r"]<<endl;
+					cout <<"query index: "<<compFragList.Element[k]["q"]<<endl;
+					cout <<"match length: "<<compFragList.Element[k]["l"]<<endl;
 
-					//Mat warpMat = estimateRigidTransform(matchSeqQ, matchSeqR, false); // (src/query, dst/reference)
-
-					//if(warpMat.size() != cv::Size(0, 0))
-					//{
-					//	cout << "file: "<<files[j]<<endl;
-					//	cout << "match length: "<<compFragList[i].l<<endl;
-					//	cout << "scale: "<< pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2)<<endl;
-					//}
 				}
 			}
-
-			//vector<Point> matchSeq1 = subPointSeq(descriUser.sampleResult(), compDes.startIndex1(), compDes.range());
-			//vector<Point> matchSeq2 = subPointSeq(desFood.sampleResult(), compDes.startIndex2(), compDes.range());
-
-			//Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
-			////cout <<"type: "<<warpingResult.type()<<endl;
-			////cout << warp_mat.size()<<endl;
-			//if(warp_mat.size() != cv::Size(0,0))
-			//{
-			//	cout << "file: "<< files[j]<<endl;
-			//	cout << "score: "<<compDes.score()<<endl;;
-			//	cout << "scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
-			//	warpAffine(food, userDraw, warp_mat, food.size());
-			//}
-
 		}
-		
+		contourCandidate.Element[i] = fileFragment;	
 	}
+
+
+	/*
+	// start warping
+	map<int, map<string, vector<frag>>>::iterator iter1;
+	map<string, vector<frag>>::iterator iter2;
+	vector<frag>::iterator iter3;
+
+	tree<string> tr;
+
+
+
+
+	for(iter1 = contourCandidate.begin() ; iter1 != contourCandidate.end() ; iter1++)
+	{
+		for(iter2 = fileFragment.begin() ; iter2 != fileFragment.end() ; iter2++)
+		{
+			for(iter3 = fileFragment[iter2 -> first].begin() ; iter3 != fileFragment[iter2 -> first].end() ; iter3++)
+			{
+			}
+		}
+	}
+	*/
+
 
 	/*
 	

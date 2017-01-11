@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <vector>
 #include <algorithm>
-
-#include "fragment.h"
+#include <map>
+//#include "fragment.h"
 
 # define PI 3.1415926
 
@@ -26,7 +26,8 @@ public:
 
 	//frag fragment(int rS, int qS, int mL);
 
-	vector<frag> fragList();
+	//vector<frag> fragList();
+	vector<map<string, int>> fragList();
 
 	int startIndex1();
 	int startIndex2();
@@ -50,9 +51,11 @@ private:
 	int _range;
 	double _thresholdScore;
 	double _score;
-	vector<frag> _frag;
+	//vector<frag> _frag;
+	vector<map<string, int>> _frag;
 	vector<Point> _pointSeq1;
 	vector<Point> _pointSeq2;
 
-	bool fragExist(frag newFrag);
+	bool fragExist(map<string, int> newFrag);
+	bool fragSame(map<string, int> frag1, map<string, int> frag2);
 };

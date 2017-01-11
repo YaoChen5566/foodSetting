@@ -29,12 +29,12 @@ private:
 	void imgToDes(Mat input);
 	Mat alphaBinary(Mat input);
 	int maxContour(vector<vector<Point>> contours);
-	float contourLength(vector<Point> singleContour);
+	double contourLength(vector<Point> singleContour);
 	void getSamplePoints(vector<Point> singleContour);
 	void descriptor(vector<Point> samplePoints);
 	void getSeqDescriptor(vector<Point> samplePoints);
 
-	float angle(Point i, Point j, Point jMinusDelta);
+	double angle(Point i, Point j, Point jMinusDelta);
 	
 	vector<Point> _sampleResult;
 	Mat _resultDescri;

@@ -24,9 +24,6 @@
     <ClCompile Include="compare.cpp">
       <Filter>原始程式檔</Filter>
     </ClCompile>
-    <ClCompile Include="fragment.cpp">
-      <Filter>原始程式檔</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="descri.h">
@@ -35,8 +32,8 @@
     <ClInclude Include="compare.h">
       <Filter>原始程式檔</Filter>
     </ClInclude>
-    <ClInclude Include="fragment.h">
-      <Filter>原始程式檔</Filter>
-    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="tree.hh" />
   </ItemGroup>
 </Project>

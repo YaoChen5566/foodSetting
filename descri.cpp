@@ -116,9 +116,9 @@ int descri::maxContour(vector<vector<Point>> contours)
 }
 
 // return contour length
-float descri::contourLength(vector<Point> singleContour)
+double descri::contourLength(vector<Point> singleContour)
 {
-	float totalDist = 0;
+	double totalDist = 0;
 	Point start;
 	Point finish;
 	start = singleContour[0];
@@ -140,11 +140,11 @@ float descri::contourLength(vector<Point> singleContour)
 void descri::getSamplePoints(vector<Point> singleContour)
 {
 	int pointCount = 100;
-	int totalPoints = singleContour.size();
+	int totalPoints = (int) singleContour.size();
 
 	vector<int> pointIndex;
 	//vector<Point> samplePoints;
-	int count = singleContour.size();
+	int count = (int) singleContour.size();
 	int tmp = 0;
 
 	//float step = totalPoints/pointCount;
@@ -175,9 +175,9 @@ void descri::descriptor(vector<Point> samplePoints)
 	Point pjMinusDelta;
 	
 	int delta = 3;
-	float tmp = 0;
-	int pointsNum = samplePoints.size();
-	Mat shapeDes = Mat::zeros(pointsNum,pointsNum,CV_32FC1);
+	double tmp = 0;
+	int pointsNum = (int) samplePoints.size();
+	Mat shapeDes = Mat::zeros(pointsNum,pointsNum,CV_64FC1);
 
 	for(int i = 0 ; i < shapeDes.rows ; i++)
 	{
@@ -189,7 +189,7 @@ void descri::descriptor(vector<Point> samplePoints)
 			
 			if(abs(int((i)-(j))) < delta)
 			{
-				shapeDes.at<float>(i,i) = 0;
+				shapeDes.at<double>(i,i) = 0;
 			}
 			else 
 			{
@@ -199,7 +199,7 @@ void descri::descriptor(vector<Point> samplePoints)
 					pjMinusDelta = samplePoints[j-delta];
 
 				tmp = angle(pi, pj, pjMinusDelta);
-				shapeDes.at<float>(i,j) = tmp;
+				shapeDes.at<double>(i,j) = tmp;
 			}
 		}
 	}
@@ -215,9 +215,9 @@ void descri::getSeqDescriptor(vector<Point> samplePoints)
 	Point pjMinusDelta;
 	
 	int delta = 3;
-	float tmp = 0;
-	int pointsNum = samplePoints.size();
-	Mat shapeDes = Mat::zeros(pointsNum,pointsNum,CV_32FC1);
+	double tmp = 0;
+	int pointsNum = (int) samplePoints.size();
+	Mat shapeDes = Mat::zeros(pointsNum,pointsNum,CV_64FC1);
 
 	//start n descriptor
 	for(int n = 0 ; n < pointsNum ; n++)
@@ -232,7 +232,7 @@ void descri::getSeqDescriptor(vector<Point> samplePoints)
 			
 				if(abs(int((i)-(j))) < delta)
 				{
-					shapeDes.at<float>(i,i) = 0;
+					shapeDes.at<double>(i,i) = 0;
 				}
 				else 
 				{
@@ -242,7 +242,7 @@ void descri::getSeqDescriptor(vector<Point> samplePoints)
 						pjMinusDelta = samplePoints[j-delta];
 
 					tmp = angle(pi, pj, pjMinusDelta);
-					shapeDes.at<float>(i,j) = tmp;
+					shapeDes.at<double>(i,j) = tmp;
 				}
 			}
 		}
@@ -310,14 +310,14 @@ vector<Point> descri::sampleResult()
 //}
 
 // get angle
-float descri::angle(Point i, Point j, Point jMinusDelta)
+double descri::angle(Point i, Point j, Point jMinusDelta)
 {
 	//A = i, B = j, C = jMinusDelta
-	float cosAngle = 0; //corner i_j_jMinusDelta
-	float angle = 0;
-	float distA = 0; //BC
-	float distB = 0; //AC
-	float distC = 0; //AB
+	double cosAngle = 0; //corner i_j_jMinusDelta
+	double angle = 0;
+	double distA = 0; //BC
+	double distB = 0; //AC
+	double distC = 0; //AB
 
 	distA = sqrt(pow(j.x-jMinusDelta.x, 2) + pow(j.y-jMinusDelta.y, 2));
 	distB = sqrt(pow(i.x-jMinusDelta.x, 2) + pow(i.y-jMinusDelta.y, 2));
