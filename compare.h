@@ -22,7 +22,7 @@ public:
 	comp(Mat des1, vector<Mat> des2Seq);
 	comp();
 	comp(Mat des1, Mat des2);
-	comp(Mat des1, vector<Mat> des2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2);
+	comp(Mat des1, vector<Mat> des2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex);
 
 	//frag fragment(int rS, int qS, int mL);
 
@@ -49,6 +49,8 @@ private:
 	int _startIndex1;
 	int _startIndex2;
 	int _range;
+	int _fIndex;
+	int _cIndex;
 	double _thresholdScore;
 	double _score;
 	//vector<frag> _frag;

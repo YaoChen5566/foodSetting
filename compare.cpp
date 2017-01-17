@@ -36,11 +36,13 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq)
 		compareDesN(descri1, descri2Seq[i], i);
 }
 
-comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2)
+comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex)
 {
 	setInitial();
 	_pointSeq1 = pointSeq1;
 	_pointSeq2 = pointSeq2;
+	_fIndex = foodIndex;
+	_cIndex = contourIndex;
 	for(int i = 0 ; i < descri2Seq.size() ; i++)
 		compareDesN(descri1, descri2Seq[i], i);
 }
@@ -191,6 +193,8 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 						fragment["r"] = _startIndex1;
 						fragment["q"] = _startIndex2;
 						fragment["l"] = _range;
+						fragment["fIndex"] = _fIndex;
+						fragment["cIndex"] = _cIndex;
 					
 						if(!fragExist(fragment))
 							_frag.push_back(fragment);

@@ -25,10 +25,15 @@ using namespace cv;
 
 //single test
 void singleTest(void);
+
 //vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
+
+//get dir files
 int getdir(string dir, vector<string> &files);
+
 // edge compare
-double edgeCompare(Mat src, Mat warp);
+double edgeCompare(vector<Point> userContour, map<string, int> fragment);
+
 //subPointSeq
 vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
 
@@ -40,7 +45,16 @@ bool compareContourSize ( vector<Point> contour1, vector<Point> contour2 ) {
 }
 
 
+struct fragList
+{
+	vector<map<string, int>> Element;
+};
 
+struct cfMap
+{
+	map<int, fragList> Element;
+};
+/*
 struct fragm 
 {  
    map<string, int> Element;  
@@ -60,6 +74,7 @@ struct contourList
 {
 	map<int, foodFragList> Element;
 };
+*/
 
 int main()
 {
@@ -76,16 +91,7 @@ int main()
 	//threshold(userDrawCanny,userDrawCannyT,120,255,CV_THRESH_BINARY);
 
 
-	////cout << userDraw.type();
-	//Mat userDrawFloat;
-	//userDraw.convertTo(userDrawFloat, CV_32FC3);
-	//imwrite("float.png", userDrawFloat);
-	////userDraw.convertTo(userDrawFloat, CV_32FC3);
-	////Mat userDrawRe = userDraw.reshape((userDraw.rows * userDraw.cols, 1));
 
-
-
-	//cout << "1";
 	vector<Mat> channels;
 	split(userDraw, channels);
 
@@ -142,8 +148,9 @@ int main()
 	vector<string> files = vector<string>();
 	getdir(dir, files);
 
-	contourList contourCandidate; // key: contour index, value: map within the information of file and fragment
-	foodFragList fileFragment; //key: file, value: vector of fragment
+	cfMap foodCandidate;
+
+	fragList pairSeq;
 
 	for(int i = 0 ; i < disjointContour.size() ; i++)
 	{
@@ -159,29 +166,29 @@ int main()
 			descri desFood(foodImg);
 			vector<Mat> foodDesSeq = desFood.seqDescri();
 			imwrite("_des2.jpg", foodDesSeq[0]);
-			comp compDes(userDrawDes,foodDesSeq, descriUser.sampleResult(), desFood.sampleResult());
+			comp compDes(userDrawDes,foodDesSeq, descriUser.sampleResult(), desFood.sampleResult(), i, j);
 
-			fragCanList compFragList;
-			compFragList.Element = compDes.fragList();
+			fragList tmpPairSeq; 
+			tmpPairSeq.Element = compDes.fragList();
 
 			cout <<"file: "<<files[j]<<endl;
-			fileFragment.Element[foodImg] = compFragList;
-			if(compFragList.Element.size() > 0)
+
+			if(tmpPairSeq.Element.size() > 0)
 			{
 
-				for(int k = 0 ; k < compFragList.Element.size() ; k++)
+				for(int k = 0 ; k < tmpPairSeq.Element.size() ; k++)
 				{
-					cout <<"contour: "<<i<<endl;
-					cout <<"file: "<<files[j]<<endl;
-					cout <<"reference index: "<<compFragList.Element[k]["r"]<<endl;
-					cout <<"query index: "<<compFragList.Element[k]["q"]<<endl;
-					cout <<"match length: "<<compFragList.Element[k]["l"]<<endl;
+					cout <<"contour: "<<tmpPairSeq.Element[k]["cIndex"]<<endl;
+					cout <<"file: "<<tmpPairSeq.Element[k]["fIndex"]<<endl;
+					cout <<"reference index: "<<tmpPairSeq.Element[k]["r"]<<endl;
+					cout <<"query index: "<<tmpPairSeq.Element[k]["q"]<<endl;
+					cout <<"match length: "<<tmpPairSeq.Element[k]["l"]<<endl;
 
 				}
 			}
-
+			pairSeq.Element.insert(pairSeq.Element.end(), tmpPairSeq.Element.begin(), tmpPairSeq.Element.end());
 		}
-		contourCandidate.Element[i] = fileFragment;	
+		foodCandidate.Element[i] = pairSeq;	
 	}
 
 
@@ -259,7 +266,7 @@ void singleTest(void)
 	cout << inputDesSeq2.size()<<endl;;
 
 	//comp compDes(inputDes1,inputDes2);
-	comp compDes(inputDes1, inputDesSeq2, descri1.sampleResult(), descri2.sampleResult());
+	comp compDes(inputDes1, inputDesSeq2, descri1.sampleResult(), descri2.sampleResult(), 0, 0);
 /*
 	vector<map<string, int>> tmpppp = compDes.fragList();
 	clock_t finish = clock(); // compare finish
@@ -370,10 +377,7 @@ int getdir(string dir, vector<string> &files)
 }
 
 // edge compare
-double edgeCompare(Mat src, Mat warp)
+double edgeCompare(vector<Point> userContour, map<string, int> fragment)
 {
-	Mat result;
-	bitwise_xor(src, warp, result);
-
-	return sum(result).val[0]/(src.rows*src.cols);
+	return 0.0;
 }
