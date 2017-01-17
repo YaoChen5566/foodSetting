@@ -48,7 +48,7 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 10.0;
+	_thresholdScore = 20.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
@@ -112,9 +112,10 @@ void comp::compareDes(Mat input1, Mat input2)
 			
 				getScore = pow(abs(subSum1[i] - subSum2[j]), 2);
 				getScore /= pow(r, 2);
+				//cout << getScore<<endl;
 				if(getScore < _score)
 				{
-				 
+					cout <<"i: "<<i<<" ,j: "<<j<<" ,r:"<<r<<endl;
 					//currentScore = getScore;
 					_startIndex1 = i;
 					_startIndex2 = j;
@@ -136,7 +137,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 	Mat integral1; // sum
 	Mat integral2; // square sum
 
-	int rLim = 0.1*input1.cols; // square size
+	int rLim = 0.3*input1.cols; // square size
 	int lefttopPoint1 = 0;
 	int lefttopPoint2 = 0;
 	double tmpSum = 0;
@@ -163,7 +164,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 			}
 
 			getScore = tmpSum/pow(r,2);
-
+			//cout << getScore<<endl;
 			if(getScore < _thresholdScore)
 			{
 				_range = r;
@@ -177,14 +178,14 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 
 				Mat warpMat = estimateRigidTransform(matchSeqQ, matchSeqR, false); // (src/query, dst/reference)
 
-
-
 				// use scale and whether generate the warping matrix to judge the fragment probablity
 				if(warpMat.size() != cv::Size(0, 0))
 				{
+					//cout << "size"<<endl;
 					double scale = pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2);
-					if (abs(scale-1.0) < 5)
+					if ( abs(scale-1.0) < 2 )
 					{
+						//cout << "scale"<<endl;
 						map<string, int> fragment;
 
 						fragment["r"] = _startIndex1;

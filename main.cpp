@@ -22,10 +22,15 @@
 using namespace std;
 using namespace cv;
 
-//
+
+//single test
+void singleTest(void);
 //vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
 int getdir(string dir, vector<string> &files);
-
+// edge compare
+double edgeCompare(Mat src, Mat warp);
+//subPointSeq
+vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
 
 // comparison function object
 bool compareContourSize ( vector<Point> contour1, vector<Point> contour2 ) {
@@ -33,6 +38,8 @@ bool compareContourSize ( vector<Point> contour1, vector<Point> contour2 ) {
 	size_t j = contour2.size();
     return ( i > j );
 }
+
+
 
 struct fragm 
 {  
@@ -57,29 +64,24 @@ struct contourList
 int main()
 {
 	
-	//fragm test;
-	//test["FF"] = 1;
-
-	//map<string, int> ttt;
-	//ttt["FF"] = 1;
-
-	Mat userDraw = imread("inputImg/rabbit.jpg");
-	Mat userDraw2;
-	resize(userDraw, userDraw2, Size(userDraw.cols*2, userDraw.rows*2));
-	Mat userDrawGray;
-	cvtColor(userDraw2, userDrawGray, CV_BGR2GRAY);
-	Mat userDrawCanny;
-	Canny(userDrawGray, userDrawCanny, 25, 75, 3);
-	Mat userDrawCannyT;
-	threshold(userDrawCanny,userDrawCannyT,120,255,CV_THRESH_BINARY);
+	
+	Mat userDraw = imread("inputImg/inin.png");
+	//Mat userDraw2;
+	//resize(userDraw, userDraw2, Size(userDraw.cols*2, userDraw.rows*2));
+	//Mat userDrawGray;
+	//cvtColor(userDraw2, userDrawGray, CV_BGR2GRAY);
+	//Mat userDrawCanny;
+	//Canny(userDrawGray, userDrawCanny, 25, 75, 3);
+	//Mat userDrawCannyT;
+	//threshold(userDrawCanny,userDrawCannyT,120,255,CV_THRESH_BINARY);
 
 
-	//cout << userDraw.type();
-	Mat userDrawFloat;
-	userDraw.convertTo(userDrawFloat, CV_32FC3);
-	imwrite("float.png", userDrawFloat);
+	////cout << userDraw.type();
+	//Mat userDrawFloat;
 	//userDraw.convertTo(userDrawFloat, CV_32FC3);
-	//Mat userDrawRe = userDraw.reshape((userDraw.rows * userDraw.cols, 1));
+	//imwrite("float.png", userDrawFloat);
+	////userDraw.convertTo(userDrawFloat, CV_32FC3);
+	////Mat userDrawRe = userDraw.reshape((userDraw.rows * userDraw.cols, 1));
 
 
 
@@ -103,14 +105,6 @@ int main()
 	bitwise_or(cannyColor, cannyR, cannyColor);
 
 
-	//for(int i = 0 ; i < userDraw.cols ; i++)
-	//{
-	//	for(int j = 0 ; j < userDraw.rows ; j++)
-	//	{
-	//		cout <<"B: "<<B.at<uchar>(j, i)<<" , G: "<<G.at<uchar>(j, i)<<" , R: "<<R.at<uchar>(j, i)<<endl;
-	//		inputSpace[B.at<uchar>(j, i)][G.at<uchar>(j, i)][R.at<uchar>(j, i)] += 1;
-	//	}
-	//}
 
 	vector<vector<Point>> userDrawContours;
 	vector<Vec4i> hierarchy;
@@ -118,9 +112,7 @@ int main()
 	findContours(cannyColor.clone(), userDrawContours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0) );
 	
 	
-	string dir = string("foodImg/");
-	vector<string> files = vector<string>();
-	getdir(dir, files);
+
   
 	vector<vector<Point>> disjointContour;
 
@@ -131,9 +123,6 @@ int main()
 	}
 
 	sort(disjointContour.begin(), disjointContour.end(), compareContourSize);
-
-
-	
 
 
 	RNG rng(12345);
@@ -148,6 +137,11 @@ int main()
 	imwrite("contour.png", drawing);
 	
 
+
+	string dir = string("foodImg/");
+	vector<string> files = vector<string>();
+	getdir(dir, files);
+
 	contourList contourCandidate; // key: contour index, value: map within the information of file and fragment
 	foodFragList fileFragment; //key: file, value: vector of fragment
 
@@ -156,16 +150,16 @@ int main()
 		
 		descri descriUser(userDrawContours[i]);
 		Mat userDrawDes = descriUser.resultDescri();
-		
+		imwrite("_des1.jpg", userDrawDes);
 		for(int j = 2 ; j < files.size() ; j++)
 		{
 			string foodImg = dir + files[j];
 			Mat food = imread(foodImg, -1);
 
 			descri desFood(foodImg);
-			vector<Mat> foodDes = desFood.seqDescri();
-
-			comp compDes(userDrawDes,foodDes, descriUser.sampleResult(), desFood.sampleResult());
+			vector<Mat> foodDesSeq = desFood.seqDescri();
+			imwrite("_des2.jpg", foodDesSeq[0]);
+			comp compDes(userDrawDes,foodDesSeq, descriUser.sampleResult(), desFood.sampleResult());
 
 			fragCanList compFragList;
 			compFragList.Element = compDes.fragList();
@@ -177,16 +171,44 @@ int main()
 
 				for(int k = 0 ; k < compFragList.Element.size() ; k++)
 				{
-					//cout <<"file: "<<files[j]<<endl;
+					cout <<"contour: "<<i<<endl;
+					cout <<"file: "<<files[j]<<endl;
 					cout <<"reference index: "<<compFragList.Element[k]["r"]<<endl;
 					cout <<"query index: "<<compFragList.Element[k]["q"]<<endl;
 					cout <<"match length: "<<compFragList.Element[k]["l"]<<endl;
 
 				}
 			}
+
 		}
 		contourCandidate.Element[i] = fileFragment;	
 	}
+
+
+
+
+
+
+	//tree<foodFragList> t;
+
+	//tree<foodFragList>::iterator top;
+
+	//top = t.begin();
+
+	//map<int, foodFragList>::iterator iter1;
+	//map<int, foodFragList>::iterator iter2;
+
+
+
+
+	//// first layer
+	//for(iter1 = contourCandidate.Element.begin() ; iter1 != contourCandidate.Element.end() ; iter1++)
+	//{
+	//	tree<foodFragList>::iterator child;
+	//	child = t.append_child(top, contourCandidate.Element[iter1 -> first]);
+	//}
+
+	
 
 
 	/*
@@ -212,11 +234,19 @@ int main()
 	*/
 
 
-	/*
-	
+
+	//singleTest();
+
+	//waitKey();
+	system("Pause");
+}
+
+//single test
+void singleTest(void)
+{
 	clock_t start = clock(); // compare start
-	string tmp = "foodImg/085.png";
-	string tmp2 = "foodImg/084.png";
+	string tmp = "foodImg/162.png";
+	string tmp2 = "foodImg/162.png";
 	Mat input1 = imread(tmp, -1);
 	Mat input2 = imread(tmp2, -1);
 
@@ -229,13 +259,14 @@ int main()
 	cout << inputDesSeq2.size()<<endl;;
 
 	//comp compDes(inputDes1,inputDes2);
-	comp compDes(inputDes1, inputDesSeq2);
-
+	comp compDes(inputDes1, inputDesSeq2, descri1.sampleResult(), descri2.sampleResult());
+/*
+	vector<map<string, int>> tmpppp = compDes.fragList();
 	clock_t finish = clock(); // compare finish
 
 	cout << "time: " << finish-start<<endl;
-	
-	cout << "@start1: "<< compDes.startIndex1() <<" @start2: "<< compDes.startIndex2() <<" @range: "<< compDes.range() <<" @score: "<< compDes.score()<<endl;
+	//cout << "size: " << compDes.fragList().size()<<endl;
+	cout << "@start1: "<< compDes.startIndex1() <<" @start2: "<< compDes.startIndex2() <<" @range: "<< compDes.range() <<endl;
 
 	Mat input1_draw = input1.clone();
 	Mat input2_draw = input2.clone();
@@ -251,24 +282,28 @@ int main()
 		circle(input2_draw, pointSeq2[(compDes.startIndex2()+i)%pointSeq2.size()],1,Scalar(0,0,255,255),2);	
 	}
 
-	Mat des1RGB;
-	Mat des2RGB;
-	cvtColor(inputDes1, des1RGB, CV_GRAY2RGB);
-	cvtColor(inputDes2, des2RGB, CV_GRAY2RGB);
+
 	
 	imwrite("result1.png", input1_draw);
 	imwrite("result2.png", input2_draw);
 
+
+	//vector<map<string, int>>::iterator iterV;
+	//map<string, int>::iterator iterM;
+
+
 	vector<Point> matchSeq1 = subPointSeq(pointSeq1, compDes.startIndex1(), compDes.range());
 	vector<Point> matchSeq2 = subPointSeq(pointSeq2, compDes.startIndex2(), compDes.range());
 
-	for(int i = 0 ; i < matchSeq1.size() ; i++)
-	{
-		cout <<"1: "<<matchSeq1[i]<<" 2: "<<matchSeq2[i]<<endl;
-	}
+	//for(int i = 0 ; i < matchSeq1.size() ; i++)
+	//{
+	//	cout <<"1: "<<matchSeq1[i]<<" 2: "<<matchSeq2[i]<<endl;
+	//}
 
 
 	Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
+
+
 	cout <<"type: "<<warp_mat.size()<<endl;
 	cout <<"scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
 	//Mat vectorXY = Mat::ones(3, 1, CV_64FC1);
@@ -301,23 +336,21 @@ int main()
 	
 	warpAffine(input2, warpingResult, warp_mat, warpingResult.size());
 	imwrite("warping.png", warpingResult);
-	*/
-
-	//waitKey();
-	system("Pause");
+	
+*/
 }
 
 //get subPointSeq
-//vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range)
-//{
-//	vector<Point> result;
-//
-//	for(int i = 0 ; i < range ; i++)
-//	{
-//		result.push_back(inputSeq[(startIndex+i)%inputSeq.size()]);
-//	}
-//	return result;
-//}
+vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range)
+{
+	vector<Point> result;
+
+	for(int i = 0 ; i < range ; i++)
+	{
+		result.push_back(inputSeq[(startIndex+i)%inputSeq.size()]);
+	}
+	return result;
+}
 
 int getdir(string dir, vector<string> &files)
 {
@@ -334,4 +367,13 @@ int getdir(string dir, vector<string> &files)
     }
     closedir(dp);
     return 0;
+}
+
+// edge compare
+double edgeCompare(Mat src, Mat warp)
+{
+	Mat result;
+	bitwise_xor(src, warp, result);
+
+	return sum(result).val[0]/(src.rows*src.cols);
 }
