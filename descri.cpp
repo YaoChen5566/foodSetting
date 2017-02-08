@@ -44,11 +44,11 @@ void descri::imgToDes(Mat input)
 
 	//to binary image with alpha value
 	Mat alpha = alphaBinary(input);
-
+	
 	//color to Gray
 	Mat inputGray;
 	cvtColor(alpha, inputGray, CV_RGB2GRAY);
-
+	
 	//edge detection
 	Mat inputCanny;
 	Canny(inputGray, inputCanny, 50, 150, 3);
