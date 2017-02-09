@@ -30,16 +30,21 @@ void singleTest(void);
 //warp test
 void warpTest(void);
 
-//vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
 
 //get dir files
 int getdir(string dir, vector<string> &files);
 
+//segment image with alpha value
+Mat alphaBinary(Mat input);
+
 //three channels Canny
 Mat cannyThreeCh(Mat input);
 
-// edge compare
-double edgeCompare(Mat draw, Mat food);
+// edge error
+double edgeError(Mat draw, Mat food);
+
+//color error
+double colorError(Mat draw, Mat food);
 
 //subPointSeq
 vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
@@ -89,10 +94,10 @@ struct contourList
 int main()
 {
 	
-	Mat draw = imread("inputImg/inin.png");
-	Mat food = imread("foodImg/eye.png");
+	Mat draw = imread("inputImg/inin.png", -1);
+	Mat food = imread("foodImg/eye.png", -1);
 
-	cout << edgeCompare(draw, food)<<endl;
+	cout << colorError(draw, food)<<endl;
 
 
 
@@ -401,6 +406,7 @@ vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range)
 	return result;
 }
 
+// canny edge detection for each channel
 Mat cannyThreeCh(Mat input)
 {
 	vector<Mat> channels;
@@ -424,6 +430,7 @@ Mat cannyThreeCh(Mat input)
 	return cannyColor;
 }
 
+// get all files in the dir
 int getdir(string dir, vector<string> &files)
 {
     DIR *dp;
@@ -441,8 +448,36 @@ int getdir(string dir, vector<string> &files)
     return 0;
 }
 
+//segment image with alpha value
+Mat alphaBinary(Mat input)
+{
+	Mat alphaOrNot = Mat::zeros(input.size(),CV_8UC3);
+	for(int i = 0 ; i < input.cols ; i++)
+	{
+		for(int j = 0 ; j < input.rows ; j++)
+		{
+			Vec4b & bgra = input.at<Vec4b>(j, i);
+			Vec3b color = alphaOrNot.at<Vec3b>(j, i);
+			if(bgra[3] != 0) // not transparency
+			{
+				color[0] = 255;
+				color[1] = 255;
+				color[2] = 255;
+			}
+			else
+			{
+				color[0] = 0;
+				color[1] = 0;
+				color[2] = 0;
+			}
+			alphaOrNot.at<Vec3b>(j, i) = color;
+		}
+	}
+	return alphaOrNot;
+}
+
 // edge compare
-double edgeCompare(Mat draw, Mat food)
+double edgeError(Mat draw, Mat food)
 {
 
 	Mat drawEdge = cannyThreeCh(draw);
@@ -502,6 +537,39 @@ double edgeCompare(Mat draw, Mat food)
 	}
 
 	//cout << "Non-Zero Locations = " << nonZeroDraw << endl << endl;
+
+	return score;
+}
+
+//color compare
+double colorError(Mat draw, Mat food)
+{
+	Mat drawAlphaBin = alphaBinary(draw);
+	Mat foodAlphaBin = alphaBinary(food);
+
+	Mat resultAnd;
+	bitwise_and(drawAlphaBin, foodAlphaBin, resultAnd);
+
+	Mat resultAndG;
+	cvtColor(resultAnd, resultAndG, CV_BGR2GRAY);
+
+	Mat resultBin = resultAndG > 128;
+
+	Mat nonZeroPoint;
+	findNonZero(resultBin, nonZeroPoint);
+
+	Mat diffImg;
+	absdiff(draw, food, diffImg);
+
+	double score = 0;
+
+	for(int i = 0 ; i < nonZeroPoint.rows ; i++)
+	{
+		Point loc = nonZeroPoint.at<Point>(i);
+		Vec4b pix = diffImg.at<Vec4b>(loc);
+		
+		score += sqrt(pow(pix.val[0], 2) + pow(pix.val[1], 2) + pow(pix.val[2], 2));
+	}
 
 	return score;
 }
