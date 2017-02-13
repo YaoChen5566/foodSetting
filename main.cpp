@@ -46,6 +46,9 @@ double edgeError(Mat draw, Mat food);
 //color error
 double colorError(Mat draw, Mat food);
 
+//reference error
+double refError(Mat draw, Mat food);
+
 //subPointSeq
 vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
 
@@ -476,7 +479,7 @@ Mat alphaBinary(Mat input)
 	return alphaOrNot;
 }
 
-// edge compare
+//edge error
 double edgeError(Mat draw, Mat food)
 {
 
@@ -541,7 +544,7 @@ double edgeError(Mat draw, Mat food)
 	return score;
 }
 
-//color compare
+//color error
 double colorError(Mat draw, Mat food)
 {
 	Mat drawAlphaBin = alphaBinary(draw);
@@ -572,4 +575,62 @@ double colorError(Mat draw, Mat food)
 	}
 
 	return score;
+}
+
+//reference error
+double refError(Mat draw, Mat food)
+{
+	Mat drawEdge = cannyThreeCh(draw);
+	Mat foodEdge = cannyThreeCh(food);
+
+	vector<vector<Point>> drawSeqContours;
+	vector<Vec4i> hierarchyD;
+
+	vector<vector<Point>> foodSeqContours;
+	vector<Vec4i> hierarchyF;
+
+	findContours(drawEdge.clone(), drawSeqContours, hierarchyD, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0) );
+	findContours(foodEdge.clone(), foodSeqContours, hierarchyF, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0) );
+
+	Mat drawDrawContour = Mat::zeros(draw.size(), CV_32FC3);
+	Mat foodDrawContour = Mat::zeros(food.size(), CV_32FC3);
+
+	for(int i = 0 ; i < drawSeqContours.size() ; i++)
+		drawContours( drawDrawContour, drawSeqContours, i, Scalar(255, 255, 255), 1, 8);
+	
+	for(int i = 0 ; i < foodSeqContours.size() ; i++)
+		drawContours( foodDrawContour, foodSeqContours, i, Scalar(255, 255, 255), 1, 8);
+
+	Mat drawConGray;
+	Mat foodConGray;
+
+	cvtColor(drawDrawContour, drawConGray, CV_BGR2GRAY);
+	cvtColor(foodDrawContour, foodConGray, CV_BGR2GRAY);
+
+	Mat drawBin = drawConGray > 128;
+	Mat foodBin = foodConGray > 128;
+
+	Mat nonZeroDraw;
+	Mat nonZeroFood;
+	findNonZero(drawBin, nonZeroDraw);
+	findNonZero(foodBin, nonZeroFood);
+	
+	int thrC = 3;
+	double pointNum = 0;
+
+	for(int i = 0 ; i < nonZeroDraw.rows ; i++)
+	{
+		Point locD = nonZeroDraw.at<Point>(i);
+
+		for(int j = 0 ; j < nonZeroFood.rows ; j++)
+		{
+			Point locF = nonZeroFood.at<Point>(j);
+			double dist = norm(locF-locD);
+			
+			if(dist < thrC)
+				pointNum++;
+		}
+	}
+
+	return pointNum/nonZeroDraw.rows;
 }
