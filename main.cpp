@@ -100,7 +100,7 @@ int main()
 	Mat draw = imread("inputImg/inin.png", -1);
 	Mat food = imread("foodImg/mouth.png", -1);
 
-	cout << edgeError(draw, food)<<endl;
+	cout << refError(draw, food)<<endl;
 
 
 
@@ -612,8 +612,25 @@ double refError(Mat draw, Mat food)
 	findContours(drawEdge.clone(), drawSeqContours, hierarchyD, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0) );
 	findContours(foodEdge.clone(), foodSeqContours, hierarchyF, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0) );
 
+	vector<vector<Point>> disjointContour;
+
+	for(int i = 0 ; i < drawSeqContours.size() ; i++)
+		if(drawSeqContours[i].size()>50 && hierarchyD[i][3] != -1)
+			disjointContour.push_back(drawSeqContours[i]);
+
+	sort(disjointContour.begin(), disjointContour.end(), compareContourSize);
+
+	int drawPointNum = 0;
+
+	for(int i = 0 ; i < drawSeqContours.size() ; i++)
+	{
+		drawPointNum += int(drawSeqContours[i].size());
+	}
+
 	Mat drawDrawContour = Mat::zeros(draw.size(), CV_32FC3);
 	Mat foodDrawContour = Mat::zeros(food.size(), CV_32FC3);
+
+	cout <<"size: "<<drawSeqContours.size()<<endl;
 
 	for(int i = 0 ; i < drawSeqContours.size() ; i++)
 		drawContours( drawDrawContour, drawSeqContours, i, Scalar(255, 255, 255), 1, 8);
@@ -621,23 +638,48 @@ double refError(Mat draw, Mat food)
 	for(int i = 0 ; i < foodSeqContours.size() ; i++)
 		drawContours( foodDrawContour, foodSeqContours, i, Scalar(255, 255, 255), 1, 8);
 
-	Mat drawConGray;
+	//Mat drawConGray;
 	Mat foodConGray;
 
-	cvtColor(drawDrawContour, drawConGray, CV_BGR2GRAY);
+	//cvtColor(drawDrawContour, drawConGray, CV_BGR2GRAY);
 	cvtColor(foodDrawContour, foodConGray, CV_BGR2GRAY);
 
-	Mat drawBin = drawConGray > 128;
+	//Mat drawBin = drawConGray > 128;
 	Mat foodBin = foodConGray > 128;
 
-	Mat nonZeroDraw;
+	//Mat nonZeroDraw;
 	Mat nonZeroFood;
-	findNonZero(drawBin, nonZeroDraw);
+	//findNonZero(drawBin, nonZeroDraw);
 	findNonZero(foodBin, nonZeroFood);
 	
 	int thrC = 3;
-	double pointNum = 0;
+	double score = 0;
+	double contourErr = 0;
+	vector<double> pointDist;
+	vector<double> perContourErr;
 
+	for(int i = 0 ; i < disjointContour.size() ; i++)
+	{
+		for(int j = 0 ; j < disjointContour[i].size() ; j++)
+		{
+			Point locD = disjointContour[i][j];
+
+			for(int k = 0 ; k < nonZeroFood.rows ; k++)
+			{
+				Point locF = nonZeroFood.at<Point>(k);
+				pointDist.push_back(norm(locF-locD));
+			}
+			double tmp = *min_element(pointDist.begin(), pointDist.end());
+			//cout << tmp << endl;
+			contourErr += tmp;
+			score += tmp;
+			pointDist.clear();
+		}
+		perContourErr.push_back(contourErr/disjointContour[i].size());
+		contourErr = 0;
+	}
+
+	/*
 	for(int i = 0 ; i < nonZeroDraw.rows ; i++)
 	{
 		Point locD = nonZeroDraw.at<Point>(i);
@@ -651,6 +693,10 @@ double refError(Mat draw, Mat food)
 				pointNum++;
 		}
 	}
-
-	return pointNum/nonZeroDraw.rows;
+	*/
+	for(int i = 0 ; i < perContourErr.size() ; i++)
+	{
+		cout <<i<<": "<<perContourErr[i]<<endl;
+	}
+	return score/drawPointNum;
 }
