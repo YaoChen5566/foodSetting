@@ -98,9 +98,9 @@ int main()
 {
 	
 	Mat draw = imread("inputImg/inin.png", -1);
-	Mat food = imread("foodImg/eye.png", -1);
+	Mat food = imread("foodImg/mouth.png", -1);
 
-	cout << colorError(draw, food)<<endl;
+	cout << edgeError(draw, food)<<endl;
 
 
 
@@ -454,26 +454,17 @@ int getdir(string dir, vector<string> &files)
 //segment image with alpha value
 Mat alphaBinary(Mat input)
 {
-	Mat alphaOrNot = Mat::zeros(input.size(),CV_8UC3);
+	Mat alphaOrNot = Mat::zeros(input.size(),CV_32S);
 	for(int i = 0 ; i < input.cols ; i++)
 	{
 		for(int j = 0 ; j < input.rows ; j++)
 		{
 			Vec4b & bgra = input.at<Vec4b>(j, i);
-			Vec3b color = alphaOrNot.at<Vec3b>(j, i);
 			if(bgra[3] != 0) // not transparency
-			{
-				color[0] = 255;
-				color[1] = 255;
-				color[2] = 255;
-			}
+				alphaOrNot.at<int>(j, i) = 1;
 			else
-			{
-				color[0] = 0;
-				color[1] = 0;
-				color[2] = 0;
-			}
-			alphaOrNot.at<Vec3b>(j, i) = color;
+				alphaOrNot.at<int>(j, i) = 0;
+			
 		}
 	}
 	return alphaOrNot;
@@ -482,6 +473,7 @@ Mat alphaBinary(Mat input)
 //edge error
 double edgeError(Mat draw, Mat food)
 {
+	clock_t start = clock(); // compare start
 
 	Mat drawEdge = cannyThreeCh(draw);
 	Mat foodEdge = cannyThreeCh(food);
@@ -495,34 +487,62 @@ double edgeError(Mat draw, Mat food)
 	findContours(drawEdge.clone(), drawSeqContours, hierarchyD, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0) );
 	findContours(foodEdge.clone(), foodSeqContours, hierarchyF, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0) );
 
+	int foodPointNum = 0;
+
+	for(int i = 0 ; i < foodSeqContours.size() ; i++)
+	{
+		foodPointNum += int(foodSeqContours[i].size());
+	}
+
 	Mat drawDrawContour = Mat::zeros(draw.size(), CV_32FC3);
 	Mat foodDrawContour = Mat::zeros(food.size(), CV_32FC3);
 
 	for(int i = 0 ; i < drawSeqContours.size() ; i++)
 		drawContours( drawDrawContour, drawSeqContours, i, Scalar(255, 255, 255), 1, 8);
 	
-	for(int i = 0 ; i < foodSeqContours.size() ; i++)
-		drawContours( foodDrawContour, foodSeqContours, i, Scalar(255, 255, 255), 1, 8);
+	//for(int i = 0 ; i < foodSeqContours.size() ; i++)
+		//drawContours( foodDrawContour, foodSeqContours, i, Scalar(255, 255, 255), 1, 8);
 
 	Mat drawConGray;
-	Mat foodConGray;
+	//Mat foodConGray;
 	
 	cvtColor(drawDrawContour, drawConGray, CV_BGR2GRAY);
-	cvtColor(foodDrawContour, foodConGray, CV_BGR2GRAY);
+	//cvtColor(foodDrawContour, foodConGray, CV_BGR2GRAY);
 
 	Mat drawBin = drawConGray > 128;
-	Mat foodBin = foodConGray > 128;
+	//Mat foodBin = foodConGray > 128;
 
 	Mat nonZeroDraw;
-	Mat nonZeroFood;
+	//Mat nonZeroFood;
 	findNonZero(drawBin, nonZeroDraw);
-	findNonZero(foodBin, nonZeroFood);
+	//findNonZero(foodBin, nonZeroFood);
 	
 	vector<double> pointDist;
 
 	double score = 0;
 
-	for(int i = 0 ; i < nonZeroFood.rows ; i++)
+	for(int i = 0 ; i < foodSeqContours.size() ; i++)
+	{
+		for(int j = 0 ; j < foodSeqContours[i].size() ; j++)
+		{
+			Point locF = foodSeqContours[i][j];
+			
+			for(int k = 0 ; k < nonZeroDraw.rows ; k++)
+			{
+				Point locD = nonZeroDraw.at<Point>(j);
+				pointDist.push_back(norm(locF-locD));
+			}
+			double tmp = *min_element(pointDist.begin(), pointDist.end());
+			//cout << tmp << endl;
+			score += tmp;
+			pointDist.clear();
+		}
+	}
+	clock_t finish = clock(); // compare finish
+
+	cout << "time: " << finish-start<<endl;
+
+	/*for(int i = 0 ; i < nonZeroFood.rows ; i++)
 	{
 		Point locF = nonZeroFood.at<Point>(i);
 
@@ -537,44 +557,44 @@ double edgeError(Mat draw, Mat food)
 		cout << tmp << endl;
 		score += tmp;
 		pointDist.clear();
-	}
+	}*/
 
 	//cout << "Non-Zero Locations = " << nonZeroDraw << endl << endl;
 
-	return score;
+	return score/foodPointNum;
 }
 
 //color error
 double colorError(Mat draw, Mat food)
 {
+	double score = 0.0;
+
 	Mat drawAlphaBin = alphaBinary(draw);
 	Mat foodAlphaBin = alphaBinary(food);
 
-	Mat resultAnd;
-	bitwise_and(drawAlphaBin, foodAlphaBin, resultAnd);
-
-	Mat resultAndG;
-	cvtColor(resultAnd, resultAndG, CV_BGR2GRAY);
-
-	Mat resultBin = resultAndG > 128;
-
-	Mat nonZeroPoint;
-	findNonZero(resultBin, nonZeroPoint);
-
-	Mat diffImg;
-	absdiff(draw, food, diffImg);
-
-	double score = 0;
-
-	for(int i = 0 ; i < nonZeroPoint.rows ; i++)
+	int orValue;
+	double tmp;
+	for(int i = 0 ; i < drawAlphaBin.rows ; i++)
 	{
-		Point loc = nonZeroPoint.at<Point>(i);
-		Vec4b pix = diffImg.at<Vec4b>(loc);
-		
-		score += sqrt(pow(pix.val[0], 2) + pow(pix.val[1], 2) + pow(pix.val[2], 2));
+		for(int j = 0 ; j < drawAlphaBin.cols ; j++)
+		{
+			orValue = drawAlphaBin.at<int>(i, j) | foodAlphaBin.at<int>(i, j);
+			//cout << orValue<<endl;
+			if(orValue == 1)
+			{
+				Vec4b pixDraw = draw.at<Vec4b>(i, j);
+				Vec4b pixFood = food.at<Vec4b>(i, j);
+
+				tmp =  sqrt(pow(pixDraw.val[0]-pixFood.val[0], 2) + pow(pixDraw.val[1]-pixFood.val[1], 2) + pow(pixDraw.val[2]-pixFood.val[2], 2));
+				cout << score << endl;
+
+				score += tmp;
+
+			}
+		}
 	}
 
-	return score;
+	return score/(draw.rows*draw.cols);
 }
 
 //reference error

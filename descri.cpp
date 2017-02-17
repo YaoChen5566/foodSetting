@@ -269,46 +269,6 @@ vector<Point> descri::sampleResult()
 	return _sampleResult;
 }
 
-//void descri::desToGrayImg(Mat input)
-//{
-//	// resize input image
-//	Mat inputScaleTwo;
-//	resize(input, inputScaleTwo, Size(input.cols*2, input.rows*2) );
-//
-//	//to binary image with alpha value
-//	Mat alpha = alphaBinary(inputScaleTwo);
-//
-//	//color to Gray
-//	Mat inputGray;
-//	cvtColor(alpha, inputGray, CV_RGB2GRAY);
-//
-//	//edge detection
-//	Mat inputCanny;
-//	Canny(inputGray, inputCanny, 50, 150, 3);
-//	
-//	// find contour
-//	vector<vector<Point> > contours;
-//	vector<Vec4i> hierarchy;
-//	findContours(inputCanny, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
-//	Mat drawing = Mat::zeros( inputCanny.size(),CV_8UC1);
-//
-//	//get sample points: points in vector
-//	vector<Point>tmpGG = getSamplePoints(contours[maxContour(contours)]);
-//
-//	//get descriptor
-//	Mat tmpGeneralDescri = descriptor(tmpGG);
-//
-//	Mat grayDescri = Mat::zeros( tmpGeneralDescri.rows, tmpGeneralDescri.cols ,CV_32FC1);
-//
-//	for(int i = 0 ; i < grayDescri.rows ; i++)
-//	{
-//		for(int j = 0 ; j < grayDescri.cols ; j++)
-//		{
-//			grayDescri.at<float>(i,j) = (tmpGeneralDescri.at<float>(i,j)*255/180);
-//		}
-//	}
-//}
-
 // get angle
 double descri::angle(Point i, Point j, Point jMinusDelta)
 {
