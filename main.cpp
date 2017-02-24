@@ -63,9 +63,11 @@ bool compareContourSize ( vector<Point> contour1, vector<Point> contour2 ) {
 }
 
 
+
+
 struct fragList
 {
-	vector<map<string, int>> Element;
+	vector<map<string, int> > Element;
 };
 
 struct cfMap
@@ -97,160 +99,190 @@ struct contourList
 int main()
 {
 	
-	Mat draw = imread("inputImg/inin.png", -1);
-	Mat food = imread("foodImg/mouth.png", -1);
+	//Mat draw = imread("inputImg/inin.png", -1);
+	//Mat food = imread("foodImg/mouth.png", -1);
 
-	cout << refError(draw, food)<<endl;
-
-
-
-	//Mat userDraw = imread("inputImg/inin.png");
-
-	//vector<Mat> channels;
-	//split(userDraw, channels);
-
-	//Mat B = channels[0];
-	//Mat G = channels[1];
-	//Mat R = channels[2];
-
-	//Mat cannyB, cannyG, cannyR;
-
-	//Canny(B, cannyB, 50, 150, 3);
-	//Canny(G, cannyG, 50, 150, 3);
-	//Canny(R, cannyR, 50, 150, 3);
-
-	//Mat cannyColor = cannyThreeCh(userDraw);
-
-	//bitwise_or(cannyB, cannyG, cannyColor);
-	//bitwise_or(cannyColor, cannyR, cannyColor);
-
-	//vector<vector<Point>> userDrawContours;
-	//vector<Vec4i> hierarchy;
-
-	//findContours(cannyColor.clone(), userDrawContours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0) );
-	//
-	//vector<vector<Point>> disjointContour;
-
-	//for(int i = 0 ; i < userDrawContours.size() ; i++)
-	//{
-	//	if(userDrawContours[i].size()>50 && hierarchy[i][3] != -1)
-	//		disjointContour.push_back(userDrawContours[i]);
-	//}
-
-	//sort(disjointContour.begin(), disjointContour.end(), compareContourSize);
-
-	//RNG rng(12345);
-	//Mat drawing = Mat::zeros( userDraw.size(), CV_8UC3 );
-	//for(int i = 0 ; i < disjointContour.size() ; i++)
-	//{
-	//	cout << disjointContour[i].size()<<endl;;
-	//	drawContours( drawing, disjointContour, i ,  Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) ), 2, 8);
-	//}
-
-	//imwrite("canny.png", cannyColor);
-	//imwrite("contour.png", drawing);
-
-	//string dir = string("foodImg/");
-	////vector<string> files = vector<string>();
-	//getdir(dir, files);
-
-	//cfMap foodCandidate;
-
-	//fragList pairSeq;
-
-	//for(int i = 0 ; i < disjointContour.size() ; i++)
-	//{
-	//	
-	//	descri descriUser(userDrawContours[i]);
-	//	Mat userDrawDes = descriUser.resultDescri();
-	//	imwrite("_des1.jpg", userDrawDes);
-	//	for(int j = 2 ; j < files.size() ; j++)
-	//	{
-	//		string foodImg = dir + files[j];
-	//		Mat food = imread(foodImg, -1);
-
-	//		descri desFood(foodImg);
-	//		vector<Mat> foodDesSeq = desFood.seqDescri();
-	//		imwrite("_des2.jpg", foodDesSeq[0]);
-	//		comp compDes(userDrawDes,foodDesSeq, descriUser.sampleResult(), desFood.sampleResult(), i, j);
-
-	//		fragList tmpPairSeq; 
-	//		tmpPairSeq.Element = compDes.fragList();
-
-	//		cout <<"file: "<<files[j]<<endl;
-
-	//		if(tmpPairSeq.Element.size() > 0)
-	//		{
-
-	//			for(int k = 0 ; k < tmpPairSeq.Element.size() ; k++)
-	//			{
-	//				cout <<"contour: "<<tmpPairSeq.Element[k]["cIndex"]<<endl;
-	//				cout <<"file: "<<tmpPairSeq.Element[k]["fIndex"]<<endl;
-	//				cout <<"reference index: "<<tmpPairSeq.Element[k]["r"]<<endl;
-	//				cout <<"query index: "<<tmpPairSeq.Element[k]["q"]<<endl;
-	//				cout <<"match length: "<<tmpPairSeq.Element[k]["l"]<<endl;
-
-	//			}
-	//		}
-	//		pairSeq.Element.insert(pairSeq.Element.end(), tmpPairSeq.Element.begin(), tmpPairSeq.Element.end());
-	//	}
-	//	foodCandidate.Element[i] = pairSeq;	
-	//}
+	//cout << refError(draw, food)<<endl;
 
 
 
+	Mat userDraw = imread("inputImg/inin.png", -1);
 
+	vector<Mat> channels;
+	split(userDraw, channels);
 
+	Mat B = channels[0];
+	Mat G = channels[1];
+	Mat R = channels[2];
 
-	//tree<foodFragList> t;
+	Mat cannyB, cannyG, cannyR;
 
-	//tree<foodFragList>::iterator top;
+	Canny(B, cannyB, 50, 150, 3);
+	Canny(G, cannyG, 50, 150, 3);
+	Canny(R, cannyR, 50, 150, 3);
 
-	//top = t.begin();
+	Mat cannyColor = cannyThreeCh(userDraw);
 
-	//map<int, foodFragList>::iterator iter1;
-	//map<int, foodFragList>::iterator iter2;
+	bitwise_or(cannyB, cannyG, cannyColor);
+	bitwise_or(cannyColor, cannyR, cannyColor);
 
+	vector<vector<Point> > userDrawContours;
+	vector<Vec4i> hierarchy;
 
-
-
-	//// first layer
-	//for(iter1 = contourCandidate.Element.begin() ; iter1 != contourCandidate.Element.end() ; iter1++)
-	//{
-	//	tree<foodFragList>::iterator child;
-	//	child = t.append_child(top, contourCandidate.Element[iter1 -> first]);
-	//}
-
+	findContours(cannyColor.clone(), userDrawContours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0) );
 	
+	vector<vector<Point> > disjointContour;
 
-
-	/*
-	// start warping
-	map<int, map<string, vector<frag>>>::iterator iter1;
-	map<string, vector<frag>>::iterator iter2;
-	vector<frag>::iterator iter3;
-
-	tree<string> tr;
-
-
-
-
-	for(iter1 = contourCandidate.begin() ; iter1 != contourCandidate.end() ; iter1++)
+	for(int i = 0 ; i < userDrawContours.size() ; i++)
 	{
-		for(iter2 = fileFragment.begin() ; iter2 != fileFragment.end() ; iter2++)
+		if(userDrawContours[i].size()>50 && hierarchy[i][3] != -1)
+			disjointContour.push_back(userDrawContours[i]);
+	}
+
+	sort(disjointContour.begin(), disjointContour.end(), compareContourSize);
+
+	Mat drawing = Mat::zeros( userDraw.size(), CV_8UC3 );
+	for(int i = 0 ; i < disjointContour.size() ; i++)
+	{
+		cout << disjointContour[i].size()<<endl;;
+		drawContours( drawing, disjointContour, i ,  Scalar( 255, 255, 255), 1, 8);
+	}
+
+	Mat drawConGray;
+	//Mat foodConGray;
+	
+	cvtColor(drawing, drawConGray, CV_BGR2GRAY);
+	
+	Mat drawBin = drawConGray > 128;
+	//Mat foodBin = foodConGray > 128;
+
+	Mat nonZeroDrawEdge;
+	//Mat nonZeroFood;
+	findNonZero(drawBin, nonZeroDrawEdge);
+
+	//key nonzeroPointIndex, value: vector save map information
+	cfMap pixelCandidate;
+	fragList initMap;
+	for(int i = 0 ; i < nonZeroDrawEdge.rows ; i++)
+	{
+		pixelCandidate.Element[i] = initMap;
+	}
+
+	imwrite("canny.png", cannyColor);
+	imwrite("contour.png", drawing);
+
+	string dir = string("foodImg/");
+	//vector<string> files = vector<string>();
+	getdir(dir, files);
+
+	cfMap foodCandidate;
+
+	fragList pairSeq;
+	clock_t start = clock(); // compare start
+	for(int i = 0 ; i < disjointContour.size() ; i++)
+	{
+		
+		descri descriUser(userDrawContours[i]);
+		Mat userDrawDes = descriUser.resultDescri();
+		//imwrite("_des1.jpg", userDrawDes);
+		for(int j = 2 ; j < files.size() ; j++)
 		{
-			for(iter3 = fileFragment[iter2 -> first].begin() ; iter3 != fileFragment[iter2 -> first].end() ; iter3++)
+			string foodImg = dir + files[j];
+			Mat food = imread(foodImg, -1);
+
+			descri desFood(foodImg);
+			vector<Mat> foodDesSeq = desFood.seqDescri();
+			//imwrite("_des2.jpg", foodDesSeq[0]);
+			comp compDes(userDrawDes,foodDesSeq, descriUser.sampleResult(), desFood.sampleResult(), i, j);
+
+			fragList tmpPairSeq; 
+			tmpPairSeq.Element = compDes.fragList();
+
+			cout <<"file: "<<files[j]<<endl;
+
+			if(tmpPairSeq.Element.size() > 0)
 			{
+
+				for(int k = 0 ; k < tmpPairSeq.Element.size() ; k++)
+				{
+					cout <<"contour: "<<tmpPairSeq.Element[k]["cIndex"]<<endl;
+					cout <<"file: "<<tmpPairSeq.Element[k]["fIndex"]<<endl;
+					cout <<"reference index: "<<tmpPairSeq.Element[k]["r"]<<endl;
+					cout <<"query index: "<<tmpPairSeq.Element[k]["q"]<<endl;
+					cout <<"match length: "<<tmpPairSeq.Element[k]["l"]<<endl;
+
+					//warping and save the information for pixel and fragment
+					vector<Point> matchSeq1 = subPointSeq(descriUser.sampleResult(), tmpPairSeq.Element[k]["r"], tmpPairSeq.Element[k]["l"]);
+					vector<Point> matchSeq2 = subPointSeq(desFood.sampleResult(), tmpPairSeq.Element[k]["q"], tmpPairSeq.Element[k]["l"]);
+
+					Mat foodDrawContour = Mat::zeros(food.size(), CV_32FC4);
+					vector< vector<Point> > tmpContour;
+					tmpContour.push_back(desFood.sampleResult());
+
+					for(int m = 0 ; m < tmpContour.size() ; m++)
+						drawContours( foodDrawContour, tmpContour, m, Scalar(255, 255, 255, 255), 1, 8);
+
+					Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
+
+					Mat drawClone = userDraw.clone();
+					warpAffine(foodDrawContour, drawClone, warp_mat, drawClone.size());
+					
+					Mat foodDrawContourBin = drawConGray > 128;
+					
+					Mat nonZeroFoodDraw;
+					findNonZero(drawBin, nonZeroFoodDraw);
+
+					for(int a = 0 ; a < nonZeroDrawEdge.rows ; a++)
+					{
+						Point locD = nonZeroDrawEdge.at<Point>(a);
+						for(int b = 0 ; b < nonZeroFoodDraw.rows ; b++)
+						{
+							Point locF = nonZeroFoodDraw.at<Point>(b);
+							if (norm(locF-locD) == 0)
+							{
+								fragList tmpFL;
+								tmpFL.Element.push_back(tmpPairSeq.Element[k]);
+								pixelCandidate.Element[a] = tmpFL;
+							}
+						}
+					}
+					//warpAffine(food, userDraw2, rot_mat, userDraw.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
+					//Mat result = addTransparent(userDraw, drawClone);
+				}
 			}
+			pairSeq.Element.insert(pairSeq.Element.end(), tmpPairSeq.Element.begin(), tmpPairSeq.Element.end());
+		}
+		foodCandidate.Element[i] = pairSeq;	
+	}
+
+	clock_t finish = clock(); // compare finish
+
+	cout << "time: " << finish-start<<endl;
+
+	//	cfMap foodCandidate; fragList pairSeq;
+
+//	clock_t start = clock(); // compare start
+
+	tree<map<string, int> > stackTree;
+	tree<map<string, int> >::iterator root;
+	tree<map<string, int> >::iterator child;
+
+	root = stackTree.begin();
+
+	map<int, fragList>::iterator iter1;
+	vector<map<string, int> >::iterator iter2;
+
+	// first layer
+	for(iter1 = foodCandidate.Element.begin() ; iter1 != foodCandidate.Element.end() ; iter1++)
+	{
+		for(iter2 = iter1->second.Element.begin() ; iter2 != iter1->second.Element.end() ; iter2++)
+		{
+			//cout << (*iter2)["r"]<<endl;
+			//map<string, int> tmpMap = (*iter2);
+			//child = stackTree.append_child(root, (*iter2));
 		}
 	}
-	*/
 
-
-
-	//singleTest();
-	//warpTest();
-	//waitKey();
 	system("Pause");
 }
 
@@ -529,7 +561,7 @@ double edgeError(Mat draw, Mat food)
 			
 			for(int k = 0 ; k < nonZeroDraw.rows ; k++)
 			{
-				Point locD = nonZeroDraw.at<Point>(j);
+				Point locD = nonZeroDraw.at<Point>(k);
 				pointDist.push_back(norm(locF-locD));
 			}
 			double tmp = *min_element(pointDist.begin(), pointDist.end());
