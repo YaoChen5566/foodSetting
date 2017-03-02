@@ -50,7 +50,7 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 20.0;
+	_thresholdScore = 15.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
