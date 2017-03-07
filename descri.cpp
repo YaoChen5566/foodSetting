@@ -217,22 +217,23 @@ void descri::getSeqDescriptor(vector<Point> samplePoints)
 	int delta = 3;
 	double tmp = 0;
 	int pointsNum = (int) samplePoints.size();
-	Mat shapeDes = Mat::zeros(pointsNum,pointsNum,CV_64FC1);
 
 	//start n descriptor
 	for(int n = 0 ; n < pointsNum ; n++)
 	{
+		Mat shapeDes = Mat::zeros(pointsNum,pointsNum,CV_64FC1);
 		for(int i = 0 ; i < shapeDes.rows ; i++)
 		{
 			for(int j = 0 ; j < shapeDes.cols ; j++)
 			{
+				
 				pi = samplePoints[(i+n)%pointsNum];
 				pj = samplePoints[(j+n)%pointsNum];
 			
 			
 				if(abs(int((i)-(j))) < delta)
 				{
-					shapeDes.at<double>(i,i) = 0;
+					shapeDes.at<double>(i,j) = 0;
 				}
 				else 
 				{
@@ -247,6 +248,7 @@ void descri::getSeqDescriptor(vector<Point> samplePoints)
 			}
 		}
 		_seqDescri.push_back(shapeDes);
+
 	}
 
 }
@@ -260,6 +262,10 @@ Mat descri::resultDescri()
 //sequence descriptor
 vector<Mat> descri::seqDescri()
 {
+	//Mat tmpp = _seqDescri[0];
+	/*for(int i = 0 ; i < _seqDescri.size() ; i++)
+		imwrite(to_string(i)+"_.jpg", _seqDescri[i]);*/
+
 	return _seqDescri;
 }
 

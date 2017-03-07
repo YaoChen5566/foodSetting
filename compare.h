@@ -27,7 +27,7 @@ public:
 	//frag fragment(int rS, int qS, int mL);
 
 	//vector<frag> fragList();
-	vector<map<string, int>> fragList();
+	vector<map<string, int> > fragList();
 
 	int startIndex1();
 	int startIndex2();
@@ -54,7 +54,7 @@ private:
 	double _thresholdScore;
 	double _score;
 	//vector<frag> _frag;
-	vector<map<string, int>> _frag;
+	vector<map<string, int> > _frag;
 	vector<Point> _pointSeq1;
 	vector<Point> _pointSeq2;
 

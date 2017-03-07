@@ -50,7 +50,7 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 15.0;
+	_thresholdScore = 20.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
@@ -232,7 +232,7 @@ double comp::score()
 }
 
 // return a set of fragment
-vector<map<string, int>> comp::fragList()
+vector<map<string, int> > comp::fragList()
 {
 	return _frag;
 }
@@ -242,7 +242,7 @@ bool comp::fragExist(map<string, int> newFrag)
 {
 	bool exist = false;
 
-	for(vector<map<string, int>>::iterator i = _frag.begin() ; i != _frag.end() ; i++)
+	for(vector<map<string, int> >::iterator i = _frag.begin() ; i != _frag.end() ; i++)
 	{
 		if(fragSame(newFrag, *i))
 			exist = true;

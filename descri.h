@@ -25,6 +25,7 @@ public:
 	Mat resultDescri();
 	vector<Mat> seqDescri();
 
+
 private:
 	void imgToDes(Mat input);
 	Mat alphaBinary(Mat input);
@@ -33,11 +34,11 @@ private:
 	void getSamplePoints(vector<Point> singleContour);
 	void descriptor(vector<Point> samplePoints);
 	void getSeqDescriptor(vector<Point> samplePoints);
-
 	double angle(Point i, Point j, Point jMinusDelta);
 	
 	vector<Point> _sampleResult;
 	Mat _resultDescri;
 	vector<Mat> _seqDescri;
+	
 
 };
