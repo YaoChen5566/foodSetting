@@ -50,7 +50,7 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 20.0;
+	_thresholdScore = 30.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
@@ -139,7 +139,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 	Mat integral1; // sum
 	Mat integral2; // square sum
 
-	int rLim = 0.3*input1.cols; // square size
+	int rLim = 0.4*input1.cols; // square size
 	int lefttopPoint1 = 0;
 	int lefttopPoint2 = 0;
 	double tmpSum = 0;

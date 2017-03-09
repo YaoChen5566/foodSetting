@@ -56,6 +56,9 @@ vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int range);
 //add image with transparent background
 Mat addTransparent(Mat &bg, Mat &fg);
 
+// return the min error value index of fragment
+int minValueInMap( vector<map<string, int> > input);
+
 // comparison function object
 bool compareContourSize ( vector<Point> contour1, vector<Point> contour2 ) {
 	size_t i = contour1.size();
@@ -193,7 +196,7 @@ int main()
 				samplepointsOfFood.push_back(desFood.sampleResult());
 			}
 
-			comp compDes(desOfDraw[i],desOfFood[j-2], samplepointsOfDraw[i], samplepointsOfFood[j-2], i, j);
+			comp compDes(desOfDraw[i],desOfFood[j-2], samplepointsOfDraw[i], samplepointsOfFood[j-2], i, j-2);
 			//comp compDes(desOfDraw[i], desFood.seqDescri(), samplepointsOfDraw[i], desFood.sampleResult(), i, j);
 
 			fragList tmpPairSeq; 
@@ -207,11 +210,11 @@ int main()
 
 				for(int k = 0 ; k < tmpPairSeq.Element.size() ; k++)
 				{
-					//cout <<"contour: "<<tmpPairSeq.Element[k]["cIndex"]<<endl;
-					//cout <<"file: "<<tmpPairSeq.Element[k]["fIndex"]<<endl;
-					//cout <<"reference index: "<<tmpPairSeq.Element[k]["r"]<<endl;
-					//cout <<"query index: "<<tmpPairSeq.Element[k]["q"]<<endl;
-					//cout <<"match length: "<<tmpPairSeq.Element[k]["l"]<<endl;
+					cout <<"contour: "<<tmpPairSeq.Element[k]["cIndex"]<<endl;
+					cout <<"file: "<<files[tmpPairSeq.Element[k]["fIndex"]]<<endl;
+					cout <<"reference index: "<<tmpPairSeq.Element[k]["r"]<<endl;
+					cout <<"query index: "<<tmpPairSeq.Element[k]["q"]<<endl;
+					cout <<"match length: "<<tmpPairSeq.Element[k]["l"]<<endl;
 					
 					//warping and save the information for pixel and fragment
 					vector<Point> matchSeq1 = subPointSeq(samplepointsOfDraw[i], tmpPairSeq.Element[k]["r"], tmpPairSeq.Element[k]["l"]);
@@ -224,10 +227,12 @@ int main()
 					tmpContour.push_back(samplepointsOfFood[j-2]);
 					//tmpContour.push_back(desFood.sampleResult());
 
+					Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
+
+
 					for(int m = 0 ; m < tmpContour.size() ; m++)
 						drawContours( foodDrawContour, tmpContour, m, Scalar(255, 255, 255, 255), 1, 8);
 
-					Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
 
 					Mat drawClone = userDraw.clone();
 					warpAffine(foodDrawContour, drawClone, warp_mat, drawClone.size());
@@ -239,7 +244,7 @@ int main()
 					int tmpp;
 					tmpPairSeq.Element[k]["eError"] = edgeError(userDraw, foodStack);
 					tmpPairSeq.Element[k]["cError"] = colorError(userDraw, foodStack);
-					tmpPairSeq.Element[k]["rError"] = refError(userDraw, foodStack, tmpp);
+					tmpPairSeq.Element[k]["rError"] = 0/*refError(userDraw, foodStack, tmpp)*/;
 					tmpPairSeq.Element[k]["sError"] = tmpPairSeq.Element[k]["eError"] + tmpPairSeq.Element[k]["cError"] + tmpPairSeq.Element[k]["rError"];
 
 					Mat nonZeroFoodDraw;
@@ -274,8 +279,28 @@ int main()
 	map<int, fragList>::iterator iter1;
 	vector<map<string, int>>::iterator iter2;
 
+	int nextIndex = 0;
 
+	nextIndex = minValueInMap(foodCandidate.Element[0].Element);
 
+	//get contour and food subsequence
+	vector<Point> matchSeqC = subPointSeq(samplepointsOfDraw[foodCandidate.Element[0].Element[nextIndex]["cIndex"]], foodCandidate.Element[0].Element[nextIndex]["r"], foodCandidate.Element[0].Element[nextIndex]["l"]);
+	vector<Point> matchSeqF = subPointSeq(samplepointsOfFood[foodCandidate.Element[0].Element[nextIndex]["fIndex"]], foodCandidate.Element[0].Element[nextIndex]["q"], foodCandidate.Element[0].Element[nextIndex]["l"]);
+
+	//get warping matrix
+	Mat warpMat = estimateRigidTransform(matchSeqF, matchSeqC, false); //(src, dst)
+
+	Mat resultStack = userDraw.clone();
+	//string foodImg = dir + files[j];
+	//Mat food = imread(foodImg, -1);
+	warpAffine(imread(dir+files[foodCandidate.Element[0].Element[nextIndex]["fIndex"]+2], -1), resultStack, warpMat, userDraw.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
+
+	Mat result = addTransparent(userDraw, resultStack);
+
+	cout<< refError(userDraw, resultStack, nextIndex);
+
+	cout << "nextIndex: "<<nextIndex;
+	//cout << files[foodCandidate.Element[0].Element[nextIndex]["fIndex"]+2];
 	system("Pause");
 }
 
@@ -678,5 +703,42 @@ double refError(Mat draw, Mat food, int& nextIndex)
 		contourErr = 0;
 	}
 
+	//for(int i = 0 ; i < perContourErr.size() ; i++)
+	//{
+	//	cout <<i<<": "<<perContourErr[i]<<endl;
+	//}
+	nextIndex = distance(perContourErr.begin(), max_element (perContourErr.begin(), perContourErr.end()));
+
+	//cout << "size: "<< *max_element(perContourErr.begin(), perContourErr.end());
+
+
 	return score/drawPointNum;
+}
+
+//return the min error value fragment of index
+int minValueInMap( vector<map<string, int> > input)
+{
+	vector<map<string, int> >::iterator iterV;
+
+	int returnIndex = 0;
+	int minValue = 0;
+	string mapKey = "sError";
+
+	for(iterV = input.begin() ; iterV != input.end() ; iterV++)
+	{
+		if(iterV == input.begin())
+		{
+			minValue = (*iterV)[mapKey];
+			returnIndex =  distance(input.begin(),iterV);
+		}
+		else
+		{
+			if((*iterV)[mapKey] < minValue)
+			{
+				minValue = (*iterV)[mapKey];
+				returnIndex = distance(input.begin(), iterV);
+			}
+		}
+	}
+	return returnIndex;
 }
