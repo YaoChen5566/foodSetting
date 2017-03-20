@@ -50,7 +50,7 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 30.0;
+	_thresholdScore = 35.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
@@ -185,7 +185,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 				{
 					//cout << "size"<<endl;
 					double scale = pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2);
-					if ( abs(scale-1.0) < 2 )
+					if ( abs(scale-1.0) < 1.2 /*&& scale > 0.2*/)
 					{
 						//cout << "scale"<<endl;
 						map<string, int> fragment;

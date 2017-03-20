@@ -1,0 +1,22 @@
+﻿已經開始建置於 2017/3/20 下午 05:26:08。
+     1>節點 2 (Build 目標) 上的專案 "F:\food_setting\foodSetting\shapeDescriptor.vcxproj"。
+     1>ClCompile:
+         F:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt compare.cpp
+         compare.cpp
+     1>c:\opencv\build\include\opencv2\flann\dist.h : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
+     1>c:\opencv\build\include\opencv2\legacy\compat.hpp : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
+     1>f:\food_setting\foodsetting\compare.cpp(35): warning C4018: '<' : signed/unsigned 不相符
+     1>f:\food_setting\foodsetting\compare.cpp(46): warning C4018: '<' : signed/unsigned 不相符
+     1>f:\food_setting\foodsetting\compare.cpp(110): warning C4018: '<' : signed/unsigned 不相符
+     1>f:\food_setting\foodsetting\compare.cpp(112): warning C4018: '<' : signed/unsigned 不相符
+     1>f:\food_setting\foodsetting\compare.cpp(142): warning C4244: '正在初始化' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
+       Link:
+         F:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"F:\food_setting\foodSetting\Debug\shapeDescriptor.exe" /INCREMENTAL /NOLOGO opencv_core247d.lib opencv_imgproc247d.lib opencv_highgui247d.lib opencv_ml247d.lib opencv_video247d.lib opencv_features2d247d.lib opencv_calib3d247d.lib opencv_objdetect247d.lib opencv_contrib247d.lib opencv_legacy247d.lib opencv_flann247d.lib opencv_nonfree247d.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"F:\food_setting\foodSetting\Debug\shapeDescriptor.pdb" /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:\food_setting\foodSetting\Debug\shapeDescriptor.lib" /MACHINE:X86 Debug\compare.obj
+         Debug\descri.obj
+         Debug\main.obj
+     1>opencv_core247d.lib(opencv_core247d.dll) : fatal error LNK1112: 模組電腦類型 'x64' 與目標電腦類型 'X86' 衝突
+     1>專案 "F:\food_setting\foodSetting\shapeDescriptor.vcxproj" (Build 目標) 建置完成 -- 失敗。
+
+建置失敗。
+
+經過時間 00:00:01.79
