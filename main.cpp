@@ -109,11 +109,13 @@ int main()
 
 	sort(disjointContour.begin(), disjointContour.end(), compareContourSize);
 
+	RNG rng(12345);
 	Mat drawing = Mat::zeros( userDraw.size(), CV_8UC3 );
 	for(int i = 0 ; i < disjointContour.size() ; i++)
 	{
 		cout << disjointContour[i].size()<<endl;
-		drawContours( drawing, disjointContour, i ,  Scalar( 255, 255, 255), 1, 8);
+		Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+		drawContours( drawing, disjointContour, i ,  color, 1, 8);
 	}
 
 	imwrite("canny.png", cannyColor);
@@ -149,14 +151,16 @@ int main()
 
 	fragList pairSeq;
 	
-	clock_t start = clock(); // compare start
 
 	for(int i = 0 ; i < desOfDraw.size() ; i++)
 	{
 		cout << disjointContour[i].size()<<endl;
+		
+		clock_t start = clock(); // compare start
 
 		for(int j = 2 ; j < files.size() ; j++)
 		{
+
 			comp compDes(desOfDraw[i],desOfFood[j-2], samplepointsOfDraw[i], samplepointsOfFood[j-2], i, j-2);
 			//comp compDes(desOfDraw[i], desFood.seqDescri(), samplepointsOfDraw[i], desFood.sampleResult(), i, j);
 
@@ -172,7 +176,7 @@ int main()
 				for(int k = 0 ; k < tmpPairSeq.Element.size() ; k++)
 				{
 					//cout <<"contour: "<<tmpPairSeq.Element[k]["cIndex"]<<endl;
-					//cout <<"file: "<<files[tmpPairSeq.Element[k]["fIndex"]]<<endl;
+					//cout <<"file: "<<files[tmpPairSeq.Element[k]["fIndex"]+2]<<endl;
 					//cout <<"reference index: "<<tmpPairSeq.Element[k]["r"]<<endl;
 					//cout <<"query index: "<<tmpPairSeq.Element[k]["q"]<<endl;
 					//cout <<"match length: "<<tmpPairSeq.Element[k]["l"]<<endl;
@@ -206,18 +210,21 @@ int main()
 			}
 			pairSeq.Element.insert(pairSeq.Element.end(), tmpPairSeq.Element.begin(), tmpPairSeq.Element.end());
 
+
+
+
 		}
 		foodCandidate.Element[i] = pairSeq;	
 		pairSeq.Element.clear();
 		
+		clock_t finish = clock(); // compare finish
+
+		cout << "time: " << finish-start<<endl;
 		//cout <<i<<": " <<pairSeq.Element.size()<<endl;
 	}
-	clock_t finish = clock(); // compare finish
-	//cout << "time: " << finish-start<<endl;
-	cout <<"0's candidate" <<foodCandidate.Element[0].Element.size()<<endl;
-	cout <<"1's candidate" <<foodCandidate.Element[1].Element.size()<<endl;
-	cout <<"2's candidate" <<foodCandidate.Element[2].Element.size()<<endl;
-	cout <<"3's candidate" <<foodCandidate.Element[3].Element.size()<<endl;
+	
+	for(int i = 0 ; i < disjointContour.size() ; i++)
+		cout <<i<<"'s candidate" <<foodCandidate.Element[i].Element.size()<<endl;
 
 	vector<int> contourSeq;
 	vector<int> fragmentSeq;
@@ -263,7 +270,7 @@ int main()
 	
 	while(totalErr > 10)
 	{
-		if(preErr >= totalErr)
+		if(preErr >= totalErr && (preErr-totalErr) >= 1)
 		{
 			preErr = totalErr;
 			cout <<"nextIndex: "<<nextIndex<<endl;
@@ -273,7 +280,7 @@ int main()
 		else
 		{
 			fragPtr++;
-			if(fragPtr > contourMatchSeq.size())
+			if(fragPtr > contourMatchSeq[nextIndex].size())
 				break;
 
 			nextFrag = contourMatchSeq[nextIndex][fragPtr];

@@ -50,7 +50,7 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 35.0;
+	_thresholdScore = 50.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
@@ -167,7 +167,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 
 			getScore = tmpSum/pow(r,2);
 			//cout << getScore<<endl;
-			if(getScore < _thresholdScore)
+			if(getScore < _thresholdScore*(1.1+(r-rLim)/input1.cols))
 			{
 				_range = r;
 				_score = getScore;
