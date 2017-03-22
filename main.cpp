@@ -256,7 +256,7 @@ int main()
 
 	Mat resultStack = userDraw.clone();
 
-	warpAffine(imread(dir+files[foodCandidate.Element[0].Element[nextIndex]["fIndex"]+2], -1), resultStack, warpMat, userDraw.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
+	warpAffine(imread(dir+files[foodCandidate.Element[nextIndex].Element[nextFrag]["fIndex"]+2], -1), resultStack, warpMat, userDraw.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
 
 	Mat result = addTransparent(userDraw, resultStack);
 	Mat resultStackClone = resultStack.clone();
@@ -270,7 +270,7 @@ int main()
 	
 	while(totalErr > 10)
 	{
-		if(preErr >= totalErr && (preErr-totalErr) >= 1)
+		if(preErr >= totalErr)
 		{
 			preErr = totalErr;
 			cout <<"nextIndex: "<<nextIndex<<endl;
