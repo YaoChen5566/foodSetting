@@ -167,7 +167,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 
 			getScore = tmpSum/pow(r,2);
 			//cout << getScore<<endl;
-			if(getScore < _thresholdScore*(1.1+(r-rLim)/input1.cols))
+			if(getScore < _thresholdScore*(1+(r-rLim)/input1.cols))
 			{
 				_range = r;
 				_score = getScore;
@@ -185,7 +185,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 				{
 					//cout << "size"<<endl;
 					double scale = pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2);
-					if ( abs(scale-1.0) < 1.2 /*&& scale > 0.2*/)
+					if ( abs(scale-1.0) < 1.2 && scale > 0.2)
 					{
 						//cout << "scale"<<endl;
 						map<string, int> fragment;
