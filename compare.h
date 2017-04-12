@@ -43,6 +43,8 @@ private:
 	void compareDes(Mat input1, Mat input2);
 	void compareDesN(Mat input1, Mat input2, int index);
 	void compareDesN2(Mat input1, Mat input2, int index);
+	void clearFrag();
+	void disFrag();
 	Mat subMatrix(Mat input, int row, int col, int range);
 	vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int matchL);
 
@@ -56,6 +58,8 @@ private:
 	double _score;
 	//vector<frag> _frag;
 	vector<map<string, int> > _frag;
+	vector<map<string, int> > _totalFrag;
+	vector< map<string, int> > _clearResult;
 	vector<Point> _pointSeq1;
 	vector<Point> _pointSeq2;
 
