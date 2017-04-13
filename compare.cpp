@@ -326,12 +326,12 @@ void comp::clearFrag()
 
 	vector< map<string, int> >::iterator iter2;
 	
-	cout << "size: "<<_clearResult.size()<<endl;
+	//cout << "size: "<<_clearResult.size()<<endl;
 
 	for(iter2 = _clearResult.begin() ; iter2 != _clearResult.end() ; iter2++)
 	{
-		cout <<"l: "<< (*iter2)["l"] << ", score: " << (*iter2)["score"]<<endl;
-		//myfile << (*iter2)["l"] <<","<< 1/(*iter2)["score"] <<","<< (*iter2)["score"] <<"\n";
+		//cout <<"l: "<< (*iter2)["l"] << ", score: " << (*iter2)["score"]<<endl;
+		myfile << (*iter2)["l"] <<","<< (*iter2)["score"] <<endl;
 	}
 
 }
@@ -351,7 +351,9 @@ void comp::disFrag()
 	vector<int> intersectResult;
 	vector<int>::iterator iterI;
 
-	Mat distanceIJ = Mat::zeros(_clearResult.size(), _clearResult.size(), CV_32FC1);
+	vector<vector<double> > distanceIJ(_clearResult.size(), vector<double>(_clearResult.size(), 0));
+
+	//Mat distanceIJ = Mat::zeros(_clearResult.size(), _clearResult.size(), CV_32FC1);
 
 
 	
@@ -360,26 +362,28 @@ void comp::disFrag()
 
 	//cout << _clearResult.size();
 
-	for(iter1 = _clearResult.begin() ; iter1 != _clearResult.end() ; iter1++)
+	for(int c = 0 ; c < distanceIJ.size() ; c++ )
 	{
-		for(iter2 = _clearResult.begin() ; iter2 != _clearResult.end() ; iter2++)
+		for(int r = 0 ; r < distanceIJ[c].size() ; r++)
 		{
-			for(int i = 0 ; i < (*iter1)["l"] ; i++ )
+			for(int i = 0 ; i < _clearResult[c]["l"] ; i++ )
 			{
-				vecI.push_back(((*iter1)["r"]+i)%70);
+				vecI.push_back((_clearResult[c]["r"]+i)%70);
 			}
-			for(int j = 0 ; j < (*iter2)["l"] ; j++ )
+			for(int j = 0 ; j < _clearResult[r]["l"] ; j++ )
 			{
-				vecJ.push_back(((*iter2)["r"]+j)%70);
+				vecJ.push_back((_clearResult[r]["r"]+j)%70);
 			}
 
 			set_union(vecI.begin(), vecI.end(), vecJ.begin(), vecJ.end() , back_inserter(unionResult));
 			set_intersection(vecI.begin(), vecI.end(), vecJ.begin(), vecJ.end(), back_inserter(intersectResult));
 			
-			//tmp = (double)intersectResult.size()/(double)unionResult.size();
-					
+			tmp = (double)intersectResult.size()/(double)unionResult.size();
+			
+			distanceIJ[c][r] = tmp;
 
-			distanceIJ.at<double>((*iter1)["l"]-36, (*iter2)["l"]-36) = (double)intersectResult.size()/(double)unionResult.size();
+			//cout << tmp<<endl;
+			//distanceIJ.at<double>((*iter1)["l"]-36, (*iter2)["l"]-36) = (double)intersectResult.size()/(double)unionResult.size();
 			//distanceIJ.at<double>((*iter2)["l"]-36, (*iter1)["l"]-36) = tmp;
 
 			vecI.clear();
@@ -390,22 +394,16 @@ void comp::disFrag()
 		}
 	}
 
-	for(iter1 = _clearResult.begin() ; iter1 != _clearResult.end() ; iter1++)
+	for(int i = 0 ; i < distanceIJ.size() ; i++)
 	{
-		int Si = 0;
-
-		for(int r = 0 ; r < distanceIJ.rows ; r++)
+		double tmp = 0;
+		for(int j = 0 ; j < distanceIJ[i].size() ; j++)
 		{
-			Si += distanceIJ.at<double>((*iter1)["l"]-36, r);
+			tmp += distanceIJ[i][j];
 		}
-
-		(*iter1)["l"] = (*iter1)["l"]*Si;
-	}
-
-	for(iter2 = _clearResult.begin() ; iter2 != _clearResult.end() ; iter2++)
-	{
-		cout <<"l: "<< (*iter2)["l"] << ", score: " << (*iter2)["score"]<<endl;
-		//myfile << (*iter2)["l"] <<","<< 1/(*iter2)["score"] <<","<< (*iter2)["score"] <<"\n";
+		//cout << tmp <<endl;
+		_clearResult[i]["score"] = _clearResult[i]["score"]*tmp/distanceIJ.size();
+		cout << _clearResult[i]["score"]<<endl;
 	}
 
 }

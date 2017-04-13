@@ -1,24 +1,14 @@
-﻿已經開始建置於 2017/4/12 下午 04:47:08。
+﻿已經開始建置於 2017/4/13 下午 01:48:15。
      1>節點 2 (Build 目標) 上的專案 "F:\food_setting\foodSetting\shapeDescriptor.vcxproj"。
      1>ClCompile:
-         F:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Release\\" /Fd"x64\Release\vc110.pdb" /Gd /TP /errorReport:prompt compare.cpp main.cpp
+         F:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\CL.exe /c /Zi /nologo /W3 /WX- /O2 /Oi /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Release\\" /Fd"x64\Release\vc110.pdb" /Gd /TP /errorReport:prompt compare.cpp
          compare.cpp
      1>c:\opencv\build\include\opencv2\flann\dist.h : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>C:\opencv\build\include\opencv2/legacy/compat.hpp : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
      1>compare.cpp(155): warning C4244: '正在初始化' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
      1>compare.cpp(240): warning C4244: '正在初始化' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
      1>compare.cpp(283): warning C4244: '=' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
-     1>compare.cpp(354): warning C4267: '引數' : 將 'size_t' 轉換為 'int'，資料可能遺失
-     1>compare.cpp(399): warning C4244: '+=' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
-     1>compare.cpp(359): warning C4101: 'tmp' : 未參考的區域變數
-         main.cpp
-     1>c:\opencv\build\include\opencv2\flann\dist.h : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
-     1>C:\opencv\build\include\opencv2/legacy/compat.hpp : warning C4819: 檔案含有無法在目前字碼頁 (950) 中表示的字元。請以 Unicode 格式儲存檔案以防止資料遺失
-     1>main.cpp(542): warning C4244: '=' : 將 'double' 轉換為 'uchar'，由於型別不同，可能導致資料遺失
-     1>main.cpp(806): warning C4244: '=' : 將 '__int64' 轉換為 'int'，由於型別不同，可能導致資料遺失
-     1>main.cpp(845): warning C4244: '=' : 將 '__int64' 轉換為 'int'，由於型別不同，可能導致資料遺失
-     1>main.cpp(852): warning C4244: '=' : 將 '__int64' 轉換為 'int'，由於型別不同，可能導致資料遺失
-     1>main.cpp(939): warning C4244: '正在初始化' : 將 'std::streamoff' 轉換為 'int'，由於型別不同，可能導致資料遺失
+     1>compare.cpp(405): warning C4244: '=' : 將 'double' 轉換為 'int'，由於型別不同，可能導致資料遺失
        Link:
          F:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"F:\food_setting\foodSetting\x64\Release\shapeDescriptor.exe" /NOLOGO opencv_core247.lib opencv_imgproc247.lib opencv_highgui247.lib opencv_ml247.lib opencv_video247.lib opencv_features2d247.lib opencv_calib3d247.lib opencv_objdetect247.lib opencv_contrib247.lib opencv_legacy247.lib opencv_flann247.lib opencv_nonfree247.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"F:\food_setting\foodSetting\x64\Release\shapeDescriptor.pdb" /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"F:\food_setting\foodSetting\x64\Release\shapeDescriptor.lib" /MACHINE:X64 x64\Release\compare.obj
          x64\Release\descri.obj
@@ -30,4 +20,4 @@
 
 建置成功。
 
-經過時間 00:00:04.13
+經過時間 00:00:02.92
