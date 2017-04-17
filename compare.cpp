@@ -54,19 +54,25 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<
 	_fIndex = foodIndex;
 	_cIndex = contourIndex;
 	for(int i = 0 ; i < descri2Seq.size() ; i++)
-		compareDesN2(descri1, descri2Seq[i], i);
+		compareDesN(descri1, descri2Seq[i], i);
 
-	clearFrag();
-	disFrag();
+	localMaxOfRQMap();
+
+	/*Mat mapRQ = normalizeRQ();
+	imwrite("RQmap.png", mapRQ);*/
+	//clearFrag();
+	//disFrag();
+	//localMin();
 }
 
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 100.0;
+	_thresholdScore = 1000.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
+	_mapRQ = Mat::zeros(Size(70, 70), CV_32S);
 }
 
 //two single image
@@ -130,7 +136,7 @@ void comp::compareDes(Mat input1, Mat input2)
 				//cout << getScore<<endl;
 				if(getScore < _score)
 				{
-					cout <<"i: "<<i<<" ,j: "<<j<<" ,r:"<<r<<endl;
+					//cout <<"i: "<<i<<" ,j: "<<j<<" ,r:"<<r<<endl;
 					//currentScore = getScore;
 					_startIndex1 = i;
 					_startIndex2 = j;
@@ -183,7 +189,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 			//cout <<r<<endl;
 			//myfile << r<<","<<1/getScore<<","<<getScore<<"\n";			
 
-			cout << r<<","<<getScore<<"\n";
+			//cout << r<<","<<getScore<<"\n";
 			//cout << getScore<<endl;
 			if(getScore < _thresholdScore)
 			{
@@ -201,27 +207,25 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 				// use scale and whether generate the warping matrix to judge the fragment probablity
 				if(warpMat.size() != cv::Size(0, 0))
 				{
-					
-					//cout << "size"<<endl;
+
 					double scale = pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2);
-
-					/*cout <<"inside"<<_fIndex<<endl;
-					myfile << r<<","<<getScore<<","<<scale<<"\n";
-*/
-					if ( abs(scale-1.0) < 1.5 /*&& scale > 0.2*/)
-					{
-						//cout << "scale"<<endl;
-						map<string, int> fragment;
-
-						fragment["r"] = _startIndex1;
-						fragment["q"] = _startIndex2;
-						fragment["l"] = _range;
-						fragment["fIndex"] = _fIndex;
-						fragment["cIndex"] = _cIndex;
+					// add to RQmap
+					if ( scale < 1.5 && scale > 0.5)
+						if(_range >= _mapRQ.at<int>(_startIndex1, _startIndex2))
+							_mapRQ.at<int>(_startIndex1, _startIndex2) = _range; 
 					
-						_frag.push_back(fragment);
+					/*
+					map<string, int> fragment;
+
+					fragment["r"] = _startIndex1;
+					fragment["q"] = _startIndex2;
+					fragment["l"] = _range;
+					fragment["fIndex"] = _fIndex;
+					fragment["cIndex"] = _cIndex;
 					
-					}
+					_frag.push_back(fragment);
+					*/
+					
 				}
 			}
 		}
@@ -243,8 +247,6 @@ void comp::compareDesN2(Mat input1, Mat input2, int index)
 	double tmpSum = 0;
 	double getScore = 0;
 	integral(sub, integral1, integral2);
-
-	//cout <<"index: "<<index<<endl;
 
 	for(int r = input1.cols ; r > rLim ; r--)
 	{
@@ -268,10 +270,7 @@ void comp::compareDesN2(Mat input1, Mat input2, int index)
 			_range = r;
 			_score = getScore;
 			_startIndex1 = i;
-			_startIndex2 = i+index;
-
-			//cout <<r<<endl;
-			//myfile << r<<","<<1/getScore<<","<<getScore<<"\n";			
+			_startIndex2 = i+index;		
 
 			map<string, int> fragment;
 
@@ -282,9 +281,59 @@ void comp::compareDesN2(Mat input1, Mat input2, int index)
 			fragment["cIndex"] = _cIndex;
 			fragment["score"] = getScore;
 
-			_frag.push_back(fragment);
+			//_frag.push_back(fragment);
 			_totalFrag.push_back(fragment);
 
+		}
+	}
+}
+
+Mat comp::normalizeRQ()
+{
+	Mat tmp = Mat::zeros(_mapRQ.size(), CV_8UC1);
+	double min, max;
+	minMaxLoc(_mapRQ, &min, &max);
+
+	for(int i = 0 ; i < _mapRQ.cols ; i++)
+	{
+		for(int j = 0 ; j < _mapRQ.rows ; j++)
+		{
+			tmp.at<char>(j, i) = _mapRQ.at<int>(j, i)*255/(max-min);
+		}
+	}
+
+	return tmp;
+}
+
+// find the local maximum of RQ map
+void comp::localMaxOfRQMap()
+{
+	// cut the RQ map into four part
+	for(int i = 0 ; i < 2 ; i++) // q is x
+	{
+		for(int j = 0 ; j < 2 ; j++) // r is y
+		{
+			Rect roi_rect = Rect(0 + (i * _mapRQ.cols/2), 0 + (j * _mapRQ.rows/2), _mapRQ.cols/2, _mapRQ.rows/2);
+			Mat roi = _mapRQ(roi_rect);
+			double minVal;
+			double maxVal;
+			Point minLoc;
+			Point maxLoc;
+
+			minMaxLoc(roi, &minVal, &maxVal, &minLoc, &maxLoc);
+
+			if(maxVal != 0)
+			{
+				map<string, int> fragment;
+				
+
+				fragment["r"] = (int)maxLoc.y + (j * _mapRQ.rows/2);
+				fragment["q"] = (int)maxLoc.x + (i * _mapRQ.cols/2);
+				fragment["l"] = maxVal;
+				fragment["fIndex"] = _fIndex;
+				fragment["cIndex"] = _cIndex;
+				_frag.push_back(fragment);
+			}
 		}
 	}
 }
@@ -295,7 +344,7 @@ void comp::clearFrag()
 	vector< map<string, int> >::iterator iter1;
 	double minScore[70];
 
-	cout <<"totalFrag Size: "<< _totalFrag.size() <<endl;
+	//cout <<"totalFrag Size: "<< _totalFrag.size() <<endl;
 
 	sort(_totalFrag.begin(), _totalFrag.end(), compareWithLength);
 
@@ -306,8 +355,7 @@ void comp::clearFrag()
 
 	for(iter1 = _totalFrag.begin() ; iter1 != _totalFrag.end() ; iter1++)
 	{
-		//cout << (*iter1)["l"]<<endl;
-
+	
 		if(minScore[(*iter1)["l"]-1] == -1)
 		{
 			minScore[(*iter1)["l"]-1] = (*iter1)["score"];
@@ -353,14 +401,7 @@ void comp::disFrag()
 
 	vector<vector<double> > distanceIJ(_clearResult.size(), vector<double>(_clearResult.size(), 0));
 
-	//Mat distanceIJ = Mat::zeros(_clearResult.size(), _clearResult.size(), CV_32FC1);
-
-
-	
-
 	double tmp;
-
-	//cout << _clearResult.size();
 
 	for(int c = 0 ; c < distanceIJ.size() ; c++ )
 	{
@@ -379,12 +420,8 @@ void comp::disFrag()
 			set_intersection(vecI.begin(), vecI.end(), vecJ.begin(), vecJ.end(), back_inserter(intersectResult));
 			
 			tmp = (double)intersectResult.size()/(double)unionResult.size();
-			
+			//cout << c <<" "<< r <<" "<<tmp<<endl;
 			distanceIJ[c][r] = tmp;
-
-			//cout << tmp<<endl;
-			//distanceIJ.at<double>((*iter1)["l"]-36, (*iter2)["l"]-36) = (double)intersectResult.size()/(double)unionResult.size();
-			//distanceIJ.at<double>((*iter2)["l"]-36, (*iter1)["l"]-36) = tmp;
 
 			vecI.clear();
 			vecJ.clear();
@@ -401,11 +438,53 @@ void comp::disFrag()
 		{
 			tmp += distanceIJ[i][j];
 		}
+		tmp = tmp/distanceIJ.size();
 		//cout << tmp <<endl;
-		_clearResult[i]["score"] = _clearResult[i]["score"]*tmp/distanceIJ.size();
-		cout << _clearResult[i]["score"]<<endl;
+		_clearResult[i]["score"] = _clearResult[i]["score"]*tmp;
+		myfile << _clearResult[i]["l"] <<","<< _clearResult[i]["score"] <<endl;
+		//cout << _clearResult[i]["score"]<<endl;
 	}
 
+}
+
+//get local minimum into _frag
+void comp::localMin()
+{
+	vector< map<string, int> >::iterator iter2;
+	for (iter2 = _clearResult.begin() + 1; iter2 != _clearResult.end() - 1; iter2++) {
+		//cout << "l: " << (*iter2)["l"] << ", score: " << (*iter2)["score"] << endl;
+
+		_startIndex1 = (*iter2)["r"];
+		_startIndex2 = (*iter2)["q"];
+		_range = (*iter2)["l"];
+		
+		if ((*(iter2 - 1))["score"] > (*iter2)["score"] && (*(iter2 + 1))["score"] > (*iter2)["score"])
+		{
+			// calculate the warping matrix
+			vector<Point> matchSeqR = subPointSeq(_pointSeq1, _startIndex1, _range);
+			vector<Point> matchSeqQ = subPointSeq(_pointSeq2, _startIndex2, _range);
+			Mat warpMat = estimateRigidTransform(matchSeqQ, matchSeqR, false); // (src/query, dst/reference)
+
+			if (warpMat.size() != cv::Size(0, 0))
+			{
+				//cout << "size"<<endl;
+				double scale = pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2);
+
+				if ( abs(scale-1.0) < 1.5 /*&& scale > 0.2*/)
+				{
+					// use scale and whether generate the warping matrix to judge the fragment probablity
+					map<string, int> fragment;
+					fragment["r"] = (*iter2)["r"];
+					fragment["q"] = (*iter2)["q"];
+					fragment["l"] = (*iter2)["l"];
+					fragment["fIndex"] = (*iter2)["fIndex"];
+					fragment["cIndex"] = (*iter2)["cIndex"];
+					fragment["score"] = (*iter2)["score"];
+					_frag.push_back(fragment);
+				}
+			}
+		}
+	}
 }
 
 //range

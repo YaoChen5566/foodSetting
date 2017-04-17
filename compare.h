@@ -45,7 +45,10 @@ private:
 	void compareDesN2(Mat input1, Mat input2, int index);
 	void clearFrag();
 	void disFrag();
+	void localMin();
 	Mat subMatrix(Mat input, int row, int col, int range);
+	Mat normalizeRQ();
+	void localMaxOfRQMap();
 	vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int matchL);
 
 
@@ -56,6 +59,7 @@ private:
 	int _cIndex;
 	double _thresholdScore;
 	double _score;
+	Mat _mapRQ;
 	//vector<frag> _frag;
 	vector<map<string, int> > _frag;
 	vector<map<string, int> > _totalFrag;
