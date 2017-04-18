@@ -58,8 +58,9 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<
 
 	localMaxOfRQMap();
 
-	/*Mat mapRQ = normalizeRQ();
-	imwrite("RQmap.png", mapRQ);*/
+	Mat mapRQ = _mapRQ.clone();
+	//Mat mapRQ = normalizeRQ();
+	imwrite("RQmap.png", mapRQ);
 	//clearFrag();
 	//disFrag();
 	//localMin();
@@ -68,7 +69,7 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 1000.0;
+	_thresholdScore = 1500.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
@@ -171,6 +172,12 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 	{
 		for(int i = 0 ; i < input1.cols ; i++)
 		{
+			_range = r;
+			_startIndex1 = i;
+			_startIndex2 = (i+index)%input1.cols;
+
+			//cout <<"startIndex1: "<<_startIndex1<<", startIndex2: "<<_startIndex2<<endl;
+
 			if( (i+r) <= input1.cols)
 			{
 				tmpSum = integral2.at<double>(i, i) + integral2.at<double>(i+r, i+r)-integral2.at<double>(i, i+r)-integral2.at<double>(i+r, i);
@@ -186,17 +193,9 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 
 			getScore = tmpSum/pow(r,2);
 
-			//cout <<r<<endl;
-			//myfile << r<<","<<1/getScore<<","<<getScore<<"\n";			
-
-			//cout << r<<","<<getScore<<"\n";
-			//cout << getScore<<endl;
 			if(getScore < _thresholdScore)
 			{
-				_range = r;
 				_score = getScore;
-				_startIndex1 = i;
-				_startIndex2 = i+index;
 
 				// calculate the warping matrix
 				vector<Point> matchSeqR = subPointSeq(_pointSeq1, _startIndex1, _range);
@@ -214,17 +213,6 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 						if(_range >= _mapRQ.at<int>(_startIndex1, _startIndex2))
 							_mapRQ.at<int>(_startIndex1, _startIndex2) = _range; 
 					
-					/*
-					map<string, int> fragment;
-
-					fragment["r"] = _startIndex1;
-					fragment["q"] = _startIndex2;
-					fragment["l"] = _range;
-					fragment["fIndex"] = _fIndex;
-					fragment["cIndex"] = _cIndex;
-					
-					_frag.push_back(fragment);
-					*/
 					
 				}
 			}

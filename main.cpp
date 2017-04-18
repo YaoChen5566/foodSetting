@@ -232,21 +232,15 @@ int main()
 					Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
 					//cout << warp_mat.size()<<endl;
 
-					if(warp_mat.size() == cv::Size(0, 0))
-					{
-						tmpPairSeq.Element.erase (tmpPairSeq.Element.begin()+k);
-					}
-					else
-					{
-						//Mat drawClone = userDraw.clone();
-						warpAffine(food, foodStack, warp_mat, foodStack.size());
+					//Mat drawClone = userDraw.clone();
+					warpAffine(food, foodStack, warp_mat, foodStack.size());
 
-						int tmpp;
-						tmpPairSeq.Element[k]["eError"] = edgeError(userDraw, foodStack);
-						tmpPairSeq.Element[k]["cError"] = colorError(userDraw, foodStack);
-						tmpPairSeq.Element[k]["rError"] = refError(userDraw, foodStack, tmpp);
-						tmpPairSeq.Element[k]["sError"] = tmpPairSeq.Element[k]["eError"] + tmpPairSeq.Element[k]["cError"] + tmpPairSeq.Element[k]["rError"];
-					}
+					int tmpp;
+					tmpPairSeq.Element[k]["eError"] = edgeError(userDraw, foodStack);
+					tmpPairSeq.Element[k]["cError"] = colorError(userDraw, foodStack);
+					tmpPairSeq.Element[k]["rError"] = refError(userDraw, foodStack, tmpp);
+					tmpPairSeq.Element[k]["sError"] = tmpPairSeq.Element[k]["eError"] + tmpPairSeq.Element[k]["cError"] + tmpPairSeq.Element[k]["rError"];
+					
 				}
 			}
 			pairSeq.Element.insert(pairSeq.Element.end(), tmpPairSeq.Element.begin(), tmpPairSeq.Element.end());
@@ -378,7 +372,7 @@ int main()
 			
 		
 		}
-		//print_tree(tr, tr.begin(), tr.end());
+		print_tree(tr, tr.begin(), tr.end());
 		if(finish)
 			break;
 	}
@@ -436,8 +430,8 @@ int main()
 void singleTest(void)
 {
 	clock_t start = clock(); // compare start
-	string tmp = "foodImg/137.png";
-	string tmp2 = "foodImg/mouth.png";
+	string tmp = "foodImg/mouth.png";
+	string tmp2 = "foodImg/137.png";
 	Mat input1 = imread(tmp, -1);
 	Mat input2 = imread(tmp2, -1);
 
@@ -462,7 +456,7 @@ void singleTest(void)
 
 	cout << "time: " << finish-start<<endl;
 	cout << "size: " << compDes.fragList().size()<<endl;
-	cout << "@start1: "<< tmpppp[1]["r"] <<" @start2: "<< tmpppp[1]["q"] <<" @range: "<< tmpppp[1]["l"] <<endl;
+	cout << "@start1: "<< tmpppp[0]["r"] <<" @start2: "<< tmpppp[0]["q"] <<" @range: "<< tmpppp[0]["l"] <<endl;
 
 	Mat input1_draw = input1.clone();
 	Mat input2_draw = input2.clone();
@@ -474,8 +468,8 @@ void singleTest(void)
 
 	for(int i = 0 ; i < compDes.range() ; i++)
 	{
-		circle(input1_draw, pointSeq1[(tmpppp[1]["r"]+i)%pointSeq1.size()],1,Scalar(0,0,255,255),2);
-		circle(input2_draw, pointSeq2[(tmpppp[1]["q"]+i)%pointSeq2.size()],1,Scalar(0,0,255,255),2);	
+		circle(input1_draw, pointSeq1[(tmpppp[0]["r"]+i)%pointSeq1.size()],1,Scalar(0,0,255,255),2);
+		circle(input2_draw, pointSeq2[(tmpppp[0]["q"]+i)%pointSeq2.size()],1,Scalar(0,0,255,255),2);	
 	}
 
 
@@ -488,8 +482,8 @@ void singleTest(void)
 	//map<string, int>::iterator iterM;
 
 
-	vector<Point> matchSeq1 = subPointSeq(pointSeq1, tmpppp[1]["r"], tmpppp[0]["l"]);
-	vector<Point> matchSeq2 = subPointSeq(pointSeq2, tmpppp[1]["q"], tmpppp[0]["l"]);
+	vector<Point> matchSeq1 = subPointSeq(pointSeq1, tmpppp[0]["r"], tmpppp[0]["l"]);
+	vector<Point> matchSeq2 = subPointSeq(pointSeq2, tmpppp[0]["q"], tmpppp[0]["l"]);
 
 	//for(int i = 0 ; i < matchSeq1.size() ; i++)
 	//{
@@ -497,13 +491,13 @@ void singleTest(void)
 	//}
 
 
-	Mat warp_mat = estimateRigidTransform(matchSeq1, matchSeq2, false); //(src, dst)
+	Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
 
 
 	cout <<"type: "<<warp_mat.size()<<endl;
 	cout <<"scale: "<< pow(warp_mat.at<double>(0,0), 2) + pow(warp_mat.at<double>(1,0), 2)  <<endl;
 	
-	warpAffine(input1, warpingResult, warp_mat, warpingResult.size());
+	warpAffine(input2, warpingResult, warp_mat, warpingResult.size());
 	imwrite("warping.png", warpingResult);
 	
 
