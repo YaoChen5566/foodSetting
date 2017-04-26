@@ -17,7 +17,7 @@
 #include "descri.h"
 #include "compare.h"
 
-//#include "fragment.h"
+#include "fragment.h"
 
 # define PI 3.1415926
 
@@ -27,7 +27,7 @@ using namespace cv;
 
 struct fragList
 {
-	vector<map<string, int> > Element;
+	vector<frag> Element;
 };
 
 struct cfMap
@@ -76,7 +76,7 @@ Mat addTransparent(Mat &bg, Mat &fg);
 int minValueInMap( vector<map<string, int> > input);
 
 //return the vector of seqence of error value from small to large
-vector<map<string, int> > vecSeqIndex(vector<map<string, int> > input);
+fragList vecSeqIndex(fragList input);
 
 //return total error value
 double getTotalErr(int state, int& nextIndex, int& nextFrag, double& refErr, vector<vector<Point> >& samplepointsOfDraw, vector<vector<Point> >& samplepointsOfFood, vector<fragList>& sortedFragList, Mat& resultStack, Mat& resultStackClone, string& dir, Mat& userDraw);
@@ -96,10 +96,10 @@ bool compareContourSize ( vector<Point> contour1, vector<Point> contour2 ) {
     return ( i > j );
 }
 
-bool compareWithCertainKey(map<string, int> input1, map<string, int> input2)
+bool compareWithCertainKey(frag input1, frag input2)
 {
-	int i = input1["sError"];
-	int j = input2["sError"];
+	double i = input1.sError;
+	double j = input2.sError;
 	return(i<j);
 }
 
@@ -183,15 +183,13 @@ int main()
 	cfMap foodCandidate;
 
 	fragList pairSeq;
-	
-
 
 	for(int i = 0 ; i < desOfDraw.size() ; i++)
 	{
-		//cout << files[76+2]<<endl;
+		clock_t start = clock(); // compare start
+		//cout << files[126+2]<<endl;
 		cout <<"contour index: "<<i<<", contour size: "<< disjointContour[i].size()<<endl;
 		
-
 		for(int j = 2 ; j < files.size() ; j++)
 		{
 
@@ -199,9 +197,10 @@ int main()
 			//comp compDes(desOfDraw[i], desFood.seqDescri(), samplepointsOfDraw[i], desFood.sampleResult(), i, j);
 
 			fragList tmpPairSeq; 
-			tmpPairSeq.Element = compDes.fragList();
+			tmpPairSeq.Element = compDes.fragList2();
 
 			//cout <<"file: "<<files[j]<<endl;
+			//cout << tmpPairSeq.Element.size()<<endl;
 
 			if(tmpPairSeq.Element.size() > 0)
 			{
@@ -209,16 +208,11 @@ int main()
 
 				for(int k = 0 ; k < tmpPairSeq.Element.size() ; k++)
 				{
-					//cout <<"contour: "<<tmpPairSeq.Element[k]["cIndex"]<<endl;
-					//cout <<"file: "<<files[tmpPairSeq.Element[k]["fIndex"]+2]<<endl;
-					//cout <<"reference index: "<<tmpPairSeq.Element[k]["r"]<<endl;
-					//cout <<"query index: "<<tmpPairSeq.Element[k]["q"]<<endl;
-					//cout <<"match length: "<<tmpPairSeq.Element[k]["l"]<<endl;
-					
-					//warping and save the error value for each fragment
-					vector<Point> matchSeq1 = subPointSeq(samplepointsOfDraw[i], tmpPairSeq.Element[k]["r"], tmpPairSeq.Element[k]["l"]);
-					vector<Point> matchSeq2 = subPointSeq(samplepointsOfFood[j-2], tmpPairSeq.Element[k]["q"], tmpPairSeq.Element[k]["l"]);
-					//vector<Point> matchSeq2 = subPointSeq(desFood.sampleResult(), tmpPairSeq.Element[k]["q"], tmpPairSeq.Element[k]["l"]);
+					cout <<"contour: "<<tmpPairSeq.Element[k].cIndex<<endl;
+					cout <<"file: "<<files[tmpPairSeq.Element[k].fIndex+2]<<endl;
+					cout <<"reference index: "<<tmpPairSeq.Element[k].r<<endl;
+					cout <<"query index: "<<tmpPairSeq.Element[k].q<<endl;
+					cout <<"match length: "<<tmpPairSeq.Element[k].l<<endl;
 
 					string foodImg = dir + files[j];
 					Mat food = imread(foodImg, -1);
@@ -229,25 +223,20 @@ int main()
 					tmpContour.push_back(samplepointsOfFood[j-2]);
 					//tmpContour.push_back(desFood.sampleResult());
 
-					Mat warp_mat = estimateRigidTransform(matchSeq2, matchSeq1, false); //(src, dst)
-					//cout << warp_mat.size()<<endl;
-
 					//Mat drawClone = userDraw.clone();
-					warpAffine(food, foodStack, warp_mat, foodStack.size());
+					warpAffine(food, foodStack, tmpPairSeq.Element[k].warpMatrix, foodStack.size());
 
 					int tmpp;
-					tmpPairSeq.Element[k]["eError"] = edgeError(userDraw, foodStack);
-					tmpPairSeq.Element[k]["cError"] = colorError(userDraw, foodStack);
-					tmpPairSeq.Element[k]["rError"] = refError(userDraw, foodStack, tmpp);
-					tmpPairSeq.Element[k]["sError"] = tmpPairSeq.Element[k]["eError"] + tmpPairSeq.Element[k]["cError"] + tmpPairSeq.Element[k]["rError"];
-					
+					tmpPairSeq.Element[k].setError(edgeError(userDraw, foodStack), colorError(userDraw, foodStack), refError(userDraw, foodStack, tmpp));
+
 				}
 			}
 			pairSeq.Element.insert(pairSeq.Element.end(), tmpPairSeq.Element.begin(), tmpPairSeq.Element.end());
 		}
 		foodCandidate.Element[i] = pairSeq;	
 		pairSeq.Element.clear();
-		
+		clock_t finishT = clock(); // compare finish
+		cout << "time: " << finishT-start<<endl;
 
 		//cout <<i<<": " <<pairSeq.Element.size()<<endl;
 	}
@@ -275,7 +264,7 @@ int main()
 	for (int i = 0; i < disjointContour.size(); i++)
 	{
 		fragList tmpFragList;
-		tmpFragList.Element = vecSeqIndex(foodCandidate.Element[i].Element);
+		tmpFragList = vecSeqIndex(foodCandidate.Element[i]);
 		sortedFragList.push_back(tmpFragList);
 	}
 
@@ -285,21 +274,18 @@ int main()
 	//nextFrag = contourMatchSeq[nextIndex][0];
 
 	
-	//for(int i = 0 ; i < sortedFragList.size() ; i++)
-	//{
-	//	for(int j = 0 ; j < sortedFragList[i].Element.size() ; j++)
-	//	{
-	//		cout << sortedFragList[i].Element[j]["cIndex"] << " ";
-	//	}
-	//	cout << endl;
-	//}
+	for(int i = 0 ; i < sortedFragList.size() ; i++)
+	{
+		for(int j = 0 ; j < sortedFragList[i].Element.size() ; j++)
+		{
+			cout << sortedFragList[i].Element[j].sError << " ";
+		}
+		cout << endl;
+	}
 
 	errSeq.push_back(preErr);
 
 	preIndex = nextIndex;
-
-	clock_t start = clock(); // compare start
-
 
 	while(1)
 	{
@@ -352,7 +338,7 @@ int main()
 				}
 				else
 				{
-					nextIndex = contourVec.back();
+					nextIndex = contourVec.back();     
 					nextFrag = fragVec.back()+1;
 
 					contourVec.pop_back();
@@ -377,50 +363,48 @@ int main()
 			break;
 	}
 
-	cout <<"!!!"<<endl;
+	//cout <<"!!!"<<endl;
 
-	sort(leafErr.begin(), leafErr.end());
+	//sort(leafErr.begin(), leafErr.end());
 
-	int numOfResult = 10;
+	//int numOfResult = 10;
 
-	for(int i = 0 ; i < numOfResult ; i++)
-	{
-		tree<string>::iterator iter;
-		iter = find(tr.begin(), tr.end() , to_string(leafErr[i]));
-		iter--;
+	//for(int i = 0 ; i < numOfResult ; i++)
+	//{
+	//	tree<string>::iterator iter;
+	//	iter = find(tr.begin(), tr.end() , to_string(leafErr[i]));
+	//	iter--;
 
-		vector<string> cfList = split_str((*iter), '_');
-		
-		Mat resultStack = userDraw.clone();
-			
-		for(vector<string>::iterator cf = cfList.begin() ; cf != cfList.end() ; cf++)
-		{
-			vector<string> cAndf = split_str((*cf), '*');
-			int stackC = stoi(cAndf[0]);
-			int stackF = stoi(cAndf[1]);
-			//cout << stackC<<" "<<stackF<<endl;
+	//	vector<string> cfList = split_str((*iter), '_');
+	//	
+	//	Mat resultStack = userDraw.clone();
+	//		
+	//	for(vector<string>::iterator cf = cfList.begin() ; cf != cfList.end() ; cf++)
+	//	{
+	//		vector<string> cAndf = split_str((*cf), '*');
+	//		int stackC = stoi(cAndf[0]);
+	//		int stackF = stoi(cAndf[1]);
+	//		//cout << stackC<<" "<<stackF<<endl;
 
-			//get contour and food subsequence
-			vector<Point> matchSeqDraw = subPointSeq(samplepointsOfDraw[sortedFragList[stackC].Element[stackF]["cIndex"]], sortedFragList[stackC].Element[stackF]["r"], sortedFragList[stackC].Element[stackF]["l"]);
-			vector<Point> matchSeqFood = subPointSeq(samplepointsOfFood[sortedFragList[stackC].Element[stackF]["fIndex"]], sortedFragList[stackC].Element[stackF]["q"], sortedFragList[stackC].Element[stackF]["l"]);
+	//		//get contour and food subsequence
+	//		vector<Point> matchSeqDraw = subPointSeq(samplepointsOfDraw[sortedFragList[stackC].Element[stackF]["cIndex"]], sortedFragList[stackC].Element[stackF]["r"], sortedFragList[stackC].Element[stackF]["l"]);
+	//		vector<Point> matchSeqFood = subPointSeq(samplepointsOfFood[sortedFragList[stackC].Element[stackF]["fIndex"]], sortedFragList[stackC].Element[stackF]["q"], sortedFragList[stackC].Element[stackF]["l"]);
 
-			//get warping matrix
-			Mat warpMat_2 = estimateRigidTransform(matchSeqFood, matchSeqDraw, false); //(src, dst)
+	//		//get warping matrix
+	//		Mat warpMat_2 = estimateRigidTransform(matchSeqFood, matchSeqDraw, false); //(src, dst)
 
-			Mat resultStack_2 = resultStack.clone();
-			warpAffine(imread(dir + files[sortedFragList[stackC].Element[stackF]["fIndex"] + 2], -1), resultStack_2, warpMat_2, resultStack_2.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
-			//resultStackClone = resultStack.clone();
-			resultStack = addTransparent(resultStack, resultStack_2);
+	//		Mat resultStack_2 = resultStack.clone();
+	//		warpAffine(imread(dir + files[sortedFragList[stackC].Element[stackF]["fIndex"] + 2], -1), resultStack_2, warpMat_2, resultStack_2.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
+	//		//resultStackClone = resultStack.clone();
+	//		resultStack = addTransparent(resultStack, resultStack_2);
 
-		}
-		imwrite("result_"+to_string(i)+".png", resultStack);
+	//	}
+	//	imwrite("result_"+to_string(i)+".png", resultStack);
 
 
-		//cout <<(*iter)<<endl;
-	}
-	clock_t finishT = clock(); // compare finish
+	//	//cout <<(*iter)<<endl;
+	//}
 
-	cout << "time: " << finishT-start<<endl;
 
 	//singleTest();
 	system("Pause");
@@ -456,7 +440,9 @@ void singleTest(void)
 
 	cout << "time: " << finish-start<<endl;
 	cout << "size: " << compDes.fragList().size()<<endl;
-	cout << "@start1: "<< tmpppp[0]["r"] <<" @start2: "<< tmpppp[0]["q"] <<" @range: "<< tmpppp[0]["l"] <<endl;
+
+	for(int i = 0 ; i < tmpppp.size() ; i++)
+		cout << "@start1: "<< tmpppp[i]["r"] <<" @start2: "<< tmpppp[i]["q"] <<" @range: "<< tmpppp[i]["l"] <<endl;
 
 	Mat input1_draw = input1.clone();
 	Mat input2_draw = input2.clone();
@@ -468,8 +454,8 @@ void singleTest(void)
 
 	for(int i = 0 ; i < compDes.range() ; i++)
 	{
-		circle(input1_draw, pointSeq1[(tmpppp[0]["r"]+i)%pointSeq1.size()],1,Scalar(0,0,255,255),2);
-		circle(input2_draw, pointSeq2[(tmpppp[0]["q"]+i)%pointSeq2.size()],1,Scalar(0,0,255,255),2);	
+		circle(input1_draw, pointSeq1[(tmpppp[0]["r"]+i)%pointSeq1.size()],1,Scalar(255,0,0,255),2);
+		circle(input2_draw, pointSeq2[(tmpppp[0]["q"]+i)%pointSeq2.size()],1,Scalar(255,0,0,255),2);	
 	}
 
 
@@ -856,23 +842,24 @@ int minValueInMap( vector<map<string, int> > input)
 	return returnIndex;
 }
 
+
 //return total error value
 double getTotalErr(int state, int& nextIndex, int& nextFrag, double& refErr, vector<vector<Point> >& samplepointsOfDraw, vector<vector<Point> >& samplepointsOfFood, vector<fragList>& sortedFragList, Mat& resultStack, Mat& resultStackClone, string& dir, Mat& userDraw) {
 
-	//get contour and food subsequence
-	vector<Point> matchSeqDraw = subPointSeq(samplepointsOfDraw[sortedFragList[nextIndex].Element[nextFrag]["cIndex"]], sortedFragList[nextIndex].Element[nextFrag]["r"], sortedFragList[nextIndex].Element[nextFrag]["l"]);
-	vector<Point> matchSeqFood = subPointSeq(samplepointsOfFood[sortedFragList[nextIndex].Element[nextFrag]["fIndex"]], sortedFragList[nextIndex].Element[nextFrag]["q"], sortedFragList[nextIndex].Element[nextFrag]["l"]);
+	////get contour and food subsequence
+	//vector<Point> matchSeqDraw = subPointSeq(samplepointsOfDraw[sortedFragList[nextIndex].Element[nextFrag]["cIndex"]], sortedFragList[nextIndex].Element[nextFrag]["r"], sortedFragList[nextIndex].Element[nextFrag]["l"]);
+	//vector<Point> matchSeqFood = subPointSeq(samplepointsOfFood[sortedFragList[nextIndex].Element[nextFrag]["fIndex"]], sortedFragList[nextIndex].Element[nextFrag]["q"], sortedFragList[nextIndex].Element[nextFrag]["l"]);
 
 	//get warping matrix
-	Mat warpMat_2 = estimateRigidTransform(matchSeqFood, matchSeqDraw, false); //(src, dst)
+	//Mat warpMat_2 = estimateRigidTransform(matchSeqFood, matchSeqDraw, false); //(src, dst)
 
 	if (state == 0) {
 		resultStack = userDraw.clone();
-		warpAffine(imread(dir + files[sortedFragList[nextIndex].Element[nextFrag]["fIndex"] + 2], -1), resultStack, warpMat_2, resultStack.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
+		warpAffine(imread(dir + files[sortedFragList[nextIndex].Element[nextFrag].fIndex + 2], -1), resultStack, sortedFragList[nextIndex].Element[nextFrag].warpMatrix, resultStack.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
 	}
 	else {
 		Mat resultStack_2 = resultStack.clone();
-		warpAffine(imread(dir + files[sortedFragList[nextIndex].Element[nextFrag]["fIndex"] + 2], -1), resultStack_2, warpMat_2, resultStack_2.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
+		warpAffine(imread(dir + files[sortedFragList[nextIndex].Element[nextFrag].fIndex + 2], -1), resultStack_2, sortedFragList[nextIndex].Element[nextFrag].warpMatrix, resultStack_2.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
 		resultStackClone = resultStack.clone();
 		resultStack = addTransparent(resultStack, resultStack_2);
 	}
@@ -881,12 +868,15 @@ double getTotalErr(int state, int& nextIndex, int& nextFrag, double& refErr, vec
 	return totalErr;
 }
 
-vector<map<string, int>> vecSeqIndex(vector<map<string, int> > input)
-{
-	vector<map<string, int> > copyTmp(input.begin(), input.end()); 
-	sort(copyTmp.begin(), copyTmp.end(), compareWithCertainKey);
 
-	return copyTmp;
+fragList vecSeqIndex(fragList input)
+{
+	fragList tmp;
+	tmp.Element.assign(input.Element.begin(), input.Element.end());
+	//fragList copyTmp(input.begin(), input.end()); 
+	sort(tmp.Element.begin(), tmp.Element.end(), compareWithCertainKey);
+
+	return tmp;
 }
 
 vector<string> split_str(string s, char ch)

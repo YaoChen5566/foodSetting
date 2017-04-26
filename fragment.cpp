@@ -4,16 +4,28 @@
 
 #include "fragment.h"
 
-frag::frag(int _r, int _q, int _l)
+frag::frag()
 {
-	setInfo(_r, _q, _l);
+	
 }
 
-void frag::setInfo(int rS, int qS, int mL)
+void frag::setInfo(int _r, int _q, int _l, int _fIndex, int _cIndex, double _score, Mat _warpMatrix)
 {
-	r = rS;
-	q = qS;
-	l = mL;
+	r = _r;
+	q = _q;
+	l = _l;
+	fIndex = _fIndex;
+	cIndex = _cIndex;
+	score = _score;
+	warpMatrix = _warpMatrix;
+}
+
+void frag::setError(double _eError, double _cError, double _rError)
+{
+	eError = _eError;
+	cError = _cError;
+	rError = _rError;
+	sError = eError+cError+rError;
 }
 
 bool frag::theSame(frag A)

@@ -11,7 +11,7 @@
 #include <fstream>
 
 #include "compare.h"
-//#include "fragment.h"
+#include "fragment.h"
 
 # define PI 3.1415926
 
@@ -60,6 +60,7 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<
 
 	Mat mapRQ = _mapRQ.clone();
 	//Mat mapRQ = normalizeRQ();
+
 	imwrite("RQmap.png", mapRQ);
 	//clearFrag();
 	//disFrag();
@@ -74,6 +75,8 @@ void comp::setInitial()
 	_startIndex2 = 0;
 	_range = 0;
 	_mapRQ = Mat::zeros(Size(70, 70), CV_32S);
+	_mapScore = Mat::zeros(Size(70, 70), CV_32S);
+	_warpMatrixMap.resize(70, vector<Mat>(70));
 }
 
 //two single image
@@ -159,7 +162,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 	Mat integral1; // sum
 	Mat integral2; // square sum
 
-	int rLim = 0.5*input1.cols; // square size
+	int rLim = 0.4*input1.cols; // square size
 	int lefttopPoint1 = 0;
 	int lefttopPoint2 = 0;
 	double tmpSum = 0;
@@ -206,14 +209,15 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 				// use scale and whether generate the warping matrix to judge the fragment probablity
 				if(warpMat.size() != cv::Size(0, 0))
 				{
-
 					double scale = pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2);
 					// add to RQmap
-					if ( scale < 1.5 && scale > 0.5)
-						if(_range >= _mapRQ.at<int>(_startIndex1, _startIndex2))
-							_mapRQ.at<int>(_startIndex1, _startIndex2) = _range; 
-					
-					
+					if ( scale < 1.5 && scale > 0.5 && _mapRQ.at<int>(_startIndex1, _startIndex2)==0 )
+					{
+						_mapRQ.at<int>(_startIndex1, _startIndex2) = _range; 
+						_mapScore.at<double>(_startIndex1, _startIndex2) = _score;
+						_warpMatrixMap[_startIndex1][_startIndex2] = warpMat;
+					}
+						//if(_range >= _mapRQ.at<int>(_startIndex1, _startIndex2))
 				}
 			}
 		}
@@ -229,7 +233,7 @@ void comp::compareDesN2(Mat input1, Mat input2, int index)
 	Mat integral1; // sum
 	Mat integral2; // square sum
 
-	int rLim = 0.5*input1.cols; // square size
+	int rLim = 0.4*input1.cols; // square size
 	int lefttopPoint1 = 0;
 	int lefttopPoint2 = 0;
 	double tmpSum = 0;
@@ -312,9 +316,16 @@ void comp::localMaxOfRQMap()
 
 			if(maxVal != 0)
 			{
+				frag fragMax;
+
+				int tmpR = (int)maxLoc.y + (j * _mapRQ.rows/2);
+				int tmpQ = (int)maxLoc.x + (i * _mapRQ.cols/2);
+
+				fragMax.setInfo(tmpR, tmpQ, maxVal, _fIndex, _cIndex, _mapScore.at<double>(tmpR, tmpQ), _warpMatrixMap[tmpR][tmpQ]);
+				_frag2.push_back(fragMax);
+
 				map<string, int> fragment;
 				
-
 				fragment["r"] = (int)maxLoc.y + (j * _mapRQ.rows/2);
 				fragment["q"] = (int)maxLoc.x + (i * _mapRQ.cols/2);
 				fragment["l"] = maxVal;
@@ -429,7 +440,7 @@ void comp::disFrag()
 		tmp = tmp/distanceIJ.size();
 		//cout << tmp <<endl;
 		_clearResult[i]["score"] = _clearResult[i]["score"]*tmp;
-		myfile << _clearResult[i]["l"] <<","<< _clearResult[i]["score"] <<endl;
+		//myfile << _clearResult[i]["l"] <<","<< _clearResult[i]["score"] <<endl;
 		//cout << _clearResult[i]["score"]<<endl;
 	}
 
@@ -505,6 +516,12 @@ vector<map<string, int> > comp::fragList()
 	return _frag;
 }
 
+// return a list of fragment with fragment.h
+vector<frag> comp::fragList2()
+{
+	return _frag2;
+}
+
 // check if the same frag in the vector
 bool comp::fragExist(map<string, int> newFrag)
 {
@@ -548,6 +565,10 @@ Mat comp::subMatrix(Mat input, int row, int col, int range)
 vector<Point> comp::subPointSeq(vector<Point> inputSeq, int startIndex, int matchL)
 {
 	vector<Point> result;
+
+	//result.push_back(inputSeq[startIndex%inputSeq.size()]);
+	//result.push_back(inputSeq[(startIndex+matchL/2)%inputSeq.size()]);
+	//result.push_back(inputSeq[(startIndex+matchL-1)%inputSeq.size()]);
 
 	for(int i = 0 ; i < matchL ; i++)
 	{

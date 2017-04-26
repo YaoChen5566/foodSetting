@@ -12,17 +12,25 @@ class frag
 {
 public:
 
-	frag(int _r, int _q, int _l);
+	frag();
 
 	int r; // reference start
 	int q; // query start
 	int l; // match length
+	int fIndex; //file index
+	int cIndex; //contour index
+	double score; //fragment score
+	Mat warpMatrix; //warping matrix
+	double eError; //edge error
+	double cError; //color error
+	double rError; //reference error
+	double sError; //sum of three error
 
-	
+	void setInfo(int _r, int _q, int _l, int _fIndex, int _cIndex, double _score, Mat _warpMatrix);
+	void setError(double _eError, double _cError, double _rError);
 	bool theSame(frag A);
 private:
 
-	void setInfo(int rS, int qS, int mL);
 
 };
 

@@ -8,7 +8,7 @@
 #include <vector>
 #include <algorithm>
 #include <map>
-//#include "fragment.h"
+#include "fragment.h"
 
 # define PI 3.1415926
 
@@ -26,7 +26,8 @@ public:
 
 	//frag fragment(int rS, int qS, int mL);
 
-	//vector<frag> fragList();
+	vector<frag> fragList2();
+
 	vector<map<string, int> > fragList();
 
 	int startIndex1();
@@ -59,8 +60,10 @@ private:
 	int _cIndex;
 	double _thresholdScore;
 	double _score;
-	Mat _mapRQ;
-	//vector<frag> _frag;
+	Mat _mapRQ; //RQmap with match length
+	Mat _mapScore; //RQmap with score
+	vector<vector<Mat> > _warpMatrixMap; //RQmap with warpmatrix
+	vector<frag> _frag2;
 	vector<map<string, int> > _frag;
 	vector<map<string, int> > _totalFrag;
 	vector< map<string, int> > _clearResult;
