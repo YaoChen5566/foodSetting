@@ -56,7 +56,7 @@ void descri::imgToDes(Mat input)
 	// find contour
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
-	findContours(inputCanny, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_NONE, Point(0, 0) );
+	findContours(inputCanny, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_NONE);
 	Mat drawing = Mat::zeros( inputCanny.size(),CV_8UC1);
 
 	//get sample points: points in vector

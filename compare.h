@@ -51,6 +51,7 @@ private:
 	Mat normalizeRQ();
 	void localMaxOfRQMap();
 	vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int matchL);
+	void get_Min_Max(Mat &rqmap, int windowSize);
 
 
 	int _startIndex1;
@@ -60,6 +61,8 @@ private:
 	int _cIndex;
 	double _thresholdScore;
 	double _score;
+	vector<Point> _maxVec;
+	vector<Point> _minVec;
 	Mat _mapRQ; //RQmap with match length
 	Mat _mapScore; //RQmap with score
 	vector<vector<Mat> > _warpMatrixMap; //RQmap with warpmatrix
@@ -70,6 +73,7 @@ private:
 	vector<Point> _pointSeq1;
 	vector<Point> _pointSeq2;
 
+	bool imageOverlap(vector<Point> newPointSeq);
 	bool fragExist(map<string, int> newFrag);
 	bool fragSame(map<string, int> frag1, map<string, int> frag2);
 };

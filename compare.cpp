@@ -70,7 +70,7 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 1500.0;
+	_thresholdScore = 500.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
@@ -171,9 +171,9 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 	
 
 
-	for(int r = input1.cols ; r > rLim ; r--)
+	for(int i = 0 ; i < input1.cols ; i++)
 	{
-		for(int i = 0 ; i < input1.cols ; i++)
+		for(int r = input1.cols ; r > rLim ; r--)
 		{
 			_range = r;
 			_startIndex1 = i;
@@ -195,6 +195,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 			}
 
 			getScore = tmpSum/pow(r,2);
+			
 
 			if(getScore < _thresholdScore)
 			{
@@ -209,21 +210,31 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 				// use scale and whether generate the warping matrix to judge the fragment probablity
 				if(warpMat.size() != cv::Size(0, 0))
 				{
+					//cout << getScore<<endl;
+					vector<Point> newPointSeq;
+					
+					for(int p = 0 ; p < _pointSeq2.size() ; p++)
+					{
+						double newX = warpMat.at<double>(0, 0)*_pointSeq2[p].x + warpMat.at<double>(0, 1)*_pointSeq2[p].y + warpMat.at<double>(0, 2);
+						double newY = warpMat.at<double>(1, 0)*_pointSeq2[p].x + warpMat.at<double>(1, 1)*_pointSeq2[p].y + warpMat.at<double>(1, 2);
+						newPointSeq.push_back(Point((int) newX, (int) newY));
+						//new_pointSeq2[k] = Point(newX, newY);
+					}
+
 					double scale = pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2);
 					// add to RQmap
-					if ( scale < 1.5 && scale > 0.5 && _mapRQ.at<int>(_startIndex1, _startIndex2)==0 )
+					if ( scale < 1.5 && scale > 0.5 &&  _mapRQ.at<int>(_startIndex1, _startIndex2)==0 && imageOverlap(newPointSeq))
 					{
 						_mapRQ.at<int>(_startIndex1, _startIndex2) = _range; 
 						_mapScore.at<double>(_startIndex1, _startIndex2) = _score;
 						_warpMatrixMap[_startIndex1][_startIndex2] = warpMat;
+						break;
 					}
 						//if(_range >= _mapRQ.at<int>(_startIndex1, _startIndex2))
 				}
 			}
 		}
 	}
-
-
 }
 
 //single and a n seq 2
@@ -297,6 +308,7 @@ Mat comp::normalizeRQ()
 	return tmp;
 }
 
+/*
 // find the local maximum of RQ map
 void comp::localMaxOfRQMap()
 {
@@ -336,6 +348,7 @@ void comp::localMaxOfRQMap()
 		}
 	}
 }
+*/
 
 //preserve the best fragment for each length
 void comp::clearFrag()
@@ -577,3 +590,120 @@ vector<Point> comp::subPointSeq(vector<Point> inputSeq, int startIndex, int matc
 	return result;
 }
 
+
+void comp::localMaxOfRQMap() {
+
+	clock_t t1, t2;
+	t1 = clock();
+	get_Min_Max(_mapRQ, 14);
+	t2 = clock();
+	//cout << "get_min_max= " << (t2 - t1) << endl;
+
+	for (int i = 0; i < _maxVec.size(); i++) {
+		_startIndex1 = _maxVec[i].x;
+		_startIndex2 = _maxVec[i].y;
+
+		if (_mapRQ.at<int>(_startIndex1, _startIndex2) > 0) {
+			//cout << "localMaxOfRQMap= " << _startIndex1 << ", " << _startIndex2 << endl;
+			/*
+			map<string, int> fragment;
+			fragment["r"] = _startIndex1;
+			fragment["q"] = _startIndex2;
+			fragment["l"] = _mapRQ.at<int>(_startIndex1, _startIndex2);
+			fragment["fIndex"] = _fIndex;
+			fragment["cIndex"] = _cIndex;
+			fragment["score"] = _mapScore.at<int>(_startIndex1, _startIndex2);
+			_frag.push_back(fragment);
+			*/
+			frag fragMax;
+			fragMax.setInfo(_startIndex1, _startIndex2, _mapRQ.at<int>(_startIndex1, _startIndex2), _fIndex, _cIndex, _mapScore.at<int>(_startIndex1, _startIndex2), _warpMatrixMap[_startIndex1][_startIndex2]);
+			_frag2.push_back(fragMax);
+		}
+	}
+	//cout << "_frag.size= " << _frag.size();
+}
+
+// get min and max
+void comp::get_Min_Max(Mat &rqmap, int windowSize) {
+	int maximum, minimum;
+	Point maxP, minP;
+	_maxVec.clear();
+	_minVec.clear();
+
+	for (int i = 0; i < rqmap.cols; i += windowSize) {
+		for (int j = 0; j < rqmap.rows; j += windowSize) {
+
+			maximum = -1;
+			minimum = 100;
+			for (int m = 0; m < windowSize; m++) {
+				for (int n = 0; n < windowSize; n++) {
+					if (rqmap.at<int>(i + m, j + n) > maximum) {
+						maximum = rqmap.at<int>(i + m, j + n);
+						maxP = Point(i + m, j + n);
+					}
+					if (rqmap.at<int>(i + m, j + n) < minimum) {
+						minimum = rqmap.at<int>(i + m, j + n);
+						minP = Point(i + m, j + n);
+					}
+				}
+			}
+			_maxVec.push_back(maxP);
+			_minVec.push_back(minP);
+		}
+	}
+}
+
+bool comp::imageOverlap(vector<Point> newPointSeq)
+{
+	Size imgSize = Size(250, 250);
+
+	
+
+	/// Calculate the distances to the contour
+	Mat contour_dist(imgSize, CV_32FC1);
+	Mat food_dist(imgSize, CV_32FC1);
+	Mat drawing = Mat::zeros(imgSize, CV_8UC1);
+	Mat drawing2 = Mat::zeros(imgSize, CV_8UC1);
+	Mat drawing3 = Mat::zeros(imgSize, CV_8UC1);
+	int contourArea = 0, foodArea = 0, overlapArea = 0;
+
+
+	for (int i = 0; i < imgSize.width; i++) {
+		for (int j = 0; j < imgSize.height; j++) {
+			contour_dist.at<float>(j, i) = pointPolygonTest(_pointSeq1, Point2f(i, j), true);
+			food_dist.at<float>(j, i) = pointPolygonTest(newPointSeq, Point2f(i, j), true);
+
+			//calculate contour area
+			if (contour_dist.at<float>(j, i) > 0) {
+				contourArea++;
+				if (food_dist.at<float>(j, i) > 0) {
+					overlapArea++;
+					drawing.at<uchar>(j, i) = 255;
+				}
+				drawing2.at<uchar>(j, i) = 255;
+			}
+			if (food_dist.at<float>(j, i) > 0) {
+				foodArea++;
+				drawing3.at<uchar>(j, i) = 255;
+			}
+		}
+	}
+	imwrite("test/test_1.png", drawing);
+	imwrite("test/test_2.png", drawing2);
+	imwrite("test/test_3.png", drawing3);
+
+	double ratio1 = (double)overlapArea / (double)contourArea;
+	double ratio2 = (double)overlapArea / (double)foodArea;
+	//cout << "ratio1= " << ratio1 << ", ratio2= " << ratio2 << endl;
+	//cout << endl;
+
+	if (/*ratio1 >= 0.5 &&*/ ratio2 >= 0.5)
+	{
+		cout << "ratio1= " << ratio1 << ", ratio2= " << ratio2 << endl;
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
