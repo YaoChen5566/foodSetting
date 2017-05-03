@@ -48,11 +48,14 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq)
 
 comp::comp(Mat descri1, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex)
 {
-	setInitial();
+
 	_pointSeq1 = pointSeq1;
 	_pointSeq2 = pointSeq2;
 	_fIndex = foodIndex;
 	_cIndex = contourIndex;
+	_rDesSize = pointSeq1.size();
+	_qDesSize = pointSeq2.size();
+	setInitial();
 	for(int i = 0 ; i < descri2Seq.size() ; i++)
 		compareDesN(descri1, descri2Seq[i], i);
 
@@ -74,9 +77,9 @@ void comp::setInitial()
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
-	_mapRQ = Mat::zeros(Size(70, 70), CV_32S);
-	_mapScore = Mat::zeros(Size(70, 70), CV_32S);
-	_warpMatrixMap.resize(70, vector<Mat>(70));
+	_mapRQ = Mat::zeros(Size(_qDesSize, _rDesSize), CV_32S); //Size(q, r): x is q, y is r
+	_mapScore = Mat::zeros(Size(_qDesSize, _rDesSize), CV_32S); //Size(q, r): x is q, y is r
+	_warpMatrixMap.resize(_qDesSize, vector<Mat>(_rDesSize)); //Size(q, r): x id q, y is r
 }
 
 //two single image
@@ -158,11 +161,24 @@ void comp::compareDes(Mat input1, Mat input2)
 //single and a n seq
 void comp::compareDesN(Mat input1, Mat input2, int index)
 {
-	Mat sub = input1-input2;
+	Mat smallerMat;
+	Mat sub;
+
+	if(input1.rows >= input2.rows)
+	{
+		smallerMat = input1(Rect(0, 0, input2.cols, input2.rows));
+		sub = smallerMat - input2;
+	}
+	else
+	{
+		smallerMat = input2(Rect(0, 0, input1.cols, input1.rows));
+		sub = input1 - smallerMat;
+	}
+
 	Mat integral1; // sum
 	Mat integral2; // square sum
 
-	int rLim = 0.4*input1.cols; // square size
+	int rLim = 0.4*sub.cols; // square size
 	int lefttopPoint1 = 0;
 	int lefttopPoint2 = 0;
 	double tmpSum = 0;
@@ -171,28 +187,28 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 	
 
 
-	for(int i = 0 ; i < input1.cols ; i++)
+	for(int i = 0 ; i < sub.cols ; i++)
 	{
-		for(int r = input1.cols ; r > rLim ; r--)
+		for(int r = sub.cols ; r > rLim ; r--)
 		{
 			_range = r;
 			_startIndex1 = i;
-			_startIndex2 = (i+index)%input1.cols;
+			_startIndex2 = (i+index)%input2.cols;
 
 			//cout <<"startIndex1: "<<_startIndex1<<", startIndex2: "<<_startIndex2<<endl;
 
-			if( (i+r) <= input1.cols)
+			if( (i+r) <= integral2.cols)
 			{
 				tmpSum = integral2.at<double>(i, i) + integral2.at<double>(i+r, i+r)-integral2.at<double>(i, i+r)-integral2.at<double>(i+r, i);
 			
 			}
-			else
-			{
-				tmpSum += integral2.at<double>(i+r-input1.cols+1, i+r-input1.cols+1); //[y, y]
-				tmpSum += integral2.at<double>(input1.cols-1, input1.cols-1)+integral2.at<double>(i, i)-integral2.at<double>(i, input1.cols-1)-integral2.at<double>(input1.cols-1, i); //[x, x]
-				tmpSum += integral2.at<double>(i+r-input1.cols+1, input1.cols-1)-integral2.at<double>(i+r-input1.cols+1, i); //[y, cols]
-				tmpSum += integral2.at<double>(input1.cols-1, i+r-input1.cols+1)-integral2.at<double>(i, i+r-input1.cols+1); //[cols, y]
-			}
+			//else
+			//{
+			//	tmpSum += integral2.at<double>(i+r-input1.cols+1, i+r-input1.cols+1); //[y, y]
+			//	tmpSum += integral2.at<double>(input1.cols-1, input1.cols-1)+integral2.at<double>(i, i)-integral2.at<double>(i, input1.cols-1)-integral2.at<double>(input1.cols-1, i); //[x, x]
+			//	tmpSum += integral2.at<double>(i+r-input1.cols+1, input1.cols-1)-integral2.at<double>(i+r-input1.cols+1, i); //[y, cols]
+			//	tmpSum += integral2.at<double>(input1.cols-1, i+r-input1.cols+1)-integral2.at<double>(i, i+r-input1.cols+1); //[cols, y]
+			//}
 
 			getScore = tmpSum/pow(r,2);
 			
@@ -218,7 +234,6 @@ void comp::compareDesN(Mat input1, Mat input2, int index)
 						double newX = warpMat.at<double>(0, 0)*_pointSeq2[p].x + warpMat.at<double>(0, 1)*_pointSeq2[p].y + warpMat.at<double>(0, 2);
 						double newY = warpMat.at<double>(1, 0)*_pointSeq2[p].x + warpMat.at<double>(1, 1)*_pointSeq2[p].y + warpMat.at<double>(1, 2);
 						newPointSeq.push_back(Point((int) newX, (int) newY));
-						//new_pointSeq2[k] = Point(newX, newY);
 					}
 
 					double scale = pow(warpMat.at<double>(0, 0), 2) + pow(warpMat.at<double>(1, 0), 2);
@@ -308,7 +323,6 @@ Mat comp::normalizeRQ()
 	return tmp;
 }
 
-/*
 // find the local maximum of RQ map
 void comp::localMaxOfRQMap()
 {
@@ -348,7 +362,6 @@ void comp::localMaxOfRQMap()
 		}
 	}
 }
-*/
 
 //preserve the best fragment for each length
 void comp::clearFrag()
@@ -590,7 +603,7 @@ vector<Point> comp::subPointSeq(vector<Point> inputSeq, int startIndex, int matc
 	return result;
 }
 
-
+/*
 void comp::localMaxOfRQMap() {
 
 	clock_t t1, t2;
@@ -605,16 +618,7 @@ void comp::localMaxOfRQMap() {
 
 		if (_mapRQ.at<int>(_startIndex1, _startIndex2) > 0) {
 			//cout << "localMaxOfRQMap= " << _startIndex1 << ", " << _startIndex2 << endl;
-			/*
-			map<string, int> fragment;
-			fragment["r"] = _startIndex1;
-			fragment["q"] = _startIndex2;
-			fragment["l"] = _mapRQ.at<int>(_startIndex1, _startIndex2);
-			fragment["fIndex"] = _fIndex;
-			fragment["cIndex"] = _cIndex;
-			fragment["score"] = _mapScore.at<int>(_startIndex1, _startIndex2);
-			_frag.push_back(fragment);
-			*/
+
 			frag fragMax;
 			fragMax.setInfo(_startIndex1, _startIndex2, _mapRQ.at<int>(_startIndex1, _startIndex2), _fIndex, _cIndex, _mapScore.at<int>(_startIndex1, _startIndex2), _warpMatrixMap[_startIndex1][_startIndex2]);
 			_frag2.push_back(fragMax);
@@ -652,6 +656,7 @@ void comp::get_Min_Max(Mat &rqmap, int windowSize) {
 		}
 	}
 }
+*/
 
 bool comp::imageOverlap(vector<Point> newPointSeq)
 {

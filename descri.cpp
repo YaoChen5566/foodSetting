@@ -111,7 +111,7 @@ int descri::maxContour(vector<vector<Point>> contours)
 			maxIndex = i;
 		}
 	}
-	//cout << "maxsize: "<<maxSize<<endl;
+	cout << "maxsize: "<<maxSize<<endl;
 	return maxIndex;
 }
 
@@ -139,7 +139,7 @@ double descri::contourLength(vector<Point> singleContour)
 // return vector of sample point
 void descri::getSamplePoints(vector<Point> singleContour)
 {
-	int pointCount = 70;
+	int pointCount = singleContour.size()/3;
 	int totalPoints = (int) singleContour.size();
 
 	vector<int> pointIndex;

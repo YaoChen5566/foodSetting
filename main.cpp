@@ -446,13 +446,7 @@ int main()
 //single test
 void singleTest(void)
 {
-	string dir = string("foodImg/");
-	getdir(dir, files);
 
-	//pre-Process for food descriptor and sample points
-	vector<vector<Mat> > desOfFood;
-	vector<vector<Point> > samplepointsOfFood;
-	preProcess(&desOfFood, &samplepointsOfFood);
 
 	clock_t start = clock(); // compare start
 	string tmp = "foodImg/mouth.png";
@@ -466,87 +460,11 @@ void singleTest(void)
 	Mat inputDes2 = descri2.resultDescri();
 	vector<Mat> inputDesSeq2 = descri2.seqDescri();
 
+	comp compDes(inputDes1, inputDesSeq2, descri1.sampleResult(), descri2.sampleResult(), 0, 0);
 
-
-
-	
-	Mat inputMouth = imread("inputImg/inin.png", -1);
-	
-	Mat draw1 = input1.clone();
-	Mat draw2 = inputMouth.clone();
-	Mat draw3 = inputMouth.clone();
-
-	Mat cannyColor = cannyThreeCh(inputMouth, true);
-
-	vector<vector<Point> > userDrawContours;
-	vector<Vec4i> hierarchy;
-
-	findContours(cannyColor.clone(), userDrawContours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE);
-	
-	vector<vector<Point> > disjointContour;
-
-	for(int i = 0 ; i < userDrawContours.size() ; i++)
-	{
-		if(userDrawContours[i].size()>70 && hierarchy[i][3] != -1)
-			disjointContour.push_back(userDrawContours[i]);
-	}
-
-	sort(disjointContour.begin(), disjointContour.end(), compareContourSize);
-
-	descri descriMouth(disjointContour[1]);
-	Mat mouthDes = descriMouth.resultDescri();
-
-	vector<Point> newS;
-
-
-	for(int i = 0 ; i < descri1.sampleResult().size() ; i++)
-	{
-		circle(draw1, descri1.sampleResult()[i], 1, Scalar(255-255/descri1.sampleResult().size()*i, 0, 255/descri1.sampleResult().size()*i, 255), 1);
-	}
-	for(int i = 0 ; i < descriMouth.sampleResult().size() ; i++)
-	{
-		circle(draw2, descriMouth.sampleResult()[i], 1, Scalar(255, 255, 255/descriMouth.sampleResult().size()*i, 255), 1);
-	}
-	for(int i = descriMouth.sampleResult().size()-1 ; i >= 0 ; i--)
-		newS.push_back(descriMouth.sampleResult()[i]);
-	for(int i = 0 ; i < newS.size() ; i++)
-	{
-		circle(draw3, newS[i], 1, Scalar(0, 0, 255/newS.size()*i, 255), 1);
-	}
-
-	descri descriMouthN(newS);
-	Mat mouthDesN = descriMouthN.resultDescri();
-
-	imwrite("seq1.png", draw1);
-	imwrite("seq2.png", draw2);
-	imwrite("seq3.png", draw3);
-	imwrite("des1.png", descri1.resultDescri());
-	imwrite("des2.png", mouthDes);
-	imwrite("des3.png", mouthDesN);
-	//cout << inputDesSeq2.size()<<endl;;
-
-	//comp compDes(inputDes1,inputDes2);
-	int index = 53;
 	fragList tmpppp;
-
-	for(int i = 2 ; i < files.size() ; i++)
-	{
-		cout << files[i]<<endl;
-		comp compDes(mouthDes, desOfFood[i], descriMouth.sampleResult(), samplepointsOfFood[i], 0, i);
-		if(compDes.fragList2().size() != 0)
-		{
-			for(int j = 0 ; j < compDes.fragList2().size() ; j++)
-			{
-				cout << compDes.fragList2().size()<<endl;
-				//tmpppp.Element.insert(tmpppp.Element.end(), compDes.fragList2().begin(), compDes.fragList2().end());
-			}
-		}
-	}
-
-	//comp compDes(inputDes1, desOfFood[index], descri1.sampleResult(), samplepointsOfFood[index], 0, index);
-
 	
-	//tmpppp.Element = compDes.fragList2();
+	tmpppp.Element = compDes.fragList2();
 
 	cout <<"fragSize: "<< tmpppp.Element.size()<<endl;;
 
