@@ -450,7 +450,7 @@ void singleTest(void)
 
 	clock_t start = clock(); // compare start
 	string tmp = "foodImg/mouth.png";
-	string tmp2 = "foodImg/061.png";
+	string tmp2 = "foodImg/010.png";
 	Mat input1 = imread(tmp, -1);
 	Mat input2 = imread(tmp2, -1);
 
@@ -459,6 +459,7 @@ void singleTest(void)
 	descri descri2(tmp2);
 	Mat inputDes2 = descri2.resultDescri();
 	vector<Mat> inputDesSeq2 = descri2.seqDescri();
+
 
 	comp compDes(inputDes1, inputDesSeq2, descri1.sampleResult(), descri2.sampleResult(), 0, 0);
 

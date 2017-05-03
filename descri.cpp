@@ -57,10 +57,22 @@ void descri::imgToDes(Mat input)
 	vector<vector<Point> > contours;
 	vector<Vec4i> hierarchy;
 	findContours(inputCanny, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_NONE);
+
+	vector<int>hull;
+	int cindex = maxContour(contours);
+	vector<Point> tmpp;
+	tmpp.assign(contours[cindex].begin(), contours[cindex].end());
+	
+	convexHull(tmpp, hull, true);
+
+	if (hull[0] > hull[1])
+		reverse(tmpp.begin(), tmpp.end());
+
+
 	Mat drawing = Mat::zeros( inputCanny.size(),CV_8UC1);
 
 	//get sample points: points in vector
-	getSamplePoints(contours[maxContour(contours)]);
+	getSamplePoints(tmpp);
 
 	//get descriptor
 	descriptor(_sampleResult);
