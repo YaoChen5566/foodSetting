@@ -25,8 +25,19 @@ descri::descri(string &imgPath)
 
 descri::descri(vector<Point> contour)
 {
+	vector<int>hull;
+	vector<Point> tmpp;
+	tmpp.assign(contour.begin(), contour.end());
+	
+	convexHull(contour, hull, true);
+
+	if (hull[0] > hull[1])
+		reverse(tmpp.begin(), tmpp.end());
+
 	//get sample points: points in vector
-	getSamplePoints(contour);
+	getSamplePoints(tmpp);
+
+
 
 	//get descriptor
 	descriptor(_sampleResult);
@@ -63,10 +74,10 @@ void descri::imgToDes(Mat input)
 	vector<Point> tmpp;
 	tmpp.assign(contours[cindex].begin(), contours[cindex].end());
 	
-	//convexHull(tmpp, hull, true);
+	convexHull(tmpp, hull, true);
 
-	//if (hull[0] > hull[1])
-	//	reverse(tmpp.begin(), tmpp.end());
+	if (hull[0] > hull[1])
+		reverse(tmpp.begin(), tmpp.end());
 
 	Mat drawing = Mat::zeros( inputCanny.size(),CV_8UC1);
 
@@ -150,7 +161,7 @@ double descri::contourLength(vector<Point> singleContour)
 // return vector of sample point
 void descri::getSamplePoints(vector<Point> singleContour)
 {
-	int pointCount = singleContour.size()/10;
+	int pointCount = singleContour.size()/3;
 	int totalPoints = (int) singleContour.size();
 
 	vector<int> pointIndex;

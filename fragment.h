@@ -25,9 +25,10 @@ public:
 	double cError; //color error
 	double rError; //reference error
 	double sError; //sum of three error
+	double iError; //intersection error
 
 	void setInfo(int _r, int _q, int _l, int _fIndex, int _cIndex, double _score, Mat _warpMatrix);
-	void setError(double _eError, double _cError, double _rError);
+	void setError(double _eError, double _cError, double _rError, double _iError);
 	bool theSame(frag A);
 private:
 

@@ -75,7 +75,7 @@ private:
 	vector<Point> _pointSeq1;
 	vector<Point> _pointSeq2;
 
-	bool imageOverlap(vector<Point> newPointSeq);
+	double imageOverlap(vector<Point> newPointSeq);
 	bool fragExist(map<string, int> newFrag);
 	bool fragSame(map<string, int> frag1, map<string, int> frag2);
 };

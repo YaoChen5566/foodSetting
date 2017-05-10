@@ -101,8 +101,8 @@ bool compareContourSize ( vector<Point> contour1, vector<Point> contour2 ) {
 
 bool compareWithCertainKey(frag input1, frag input2)
 {
-	double i = input1.sError;
-	double j = input2.sError;
+	double i = input1.iError;
+	double j = input2.iError;
 	return(i<j);
 }
 
@@ -202,7 +202,7 @@ int main()
 			fragList tmpPairSeq; 
 			tmpPairSeq.Element = compDes.fragList2();
 
-			cout <<"file: "<<files[j]<<endl;
+			//cout <<"file: "<<files[j]<<endl;
 			//cout << tmpPairSeq.Element.size()<<endl;
 
 			if(tmpPairSeq.Element.size() > 0)
@@ -219,7 +219,7 @@ int main()
 
 					string foodImg = dir + files[j];
 					Mat food = imread(foodImg, -1);
-					cout <<files[j]<<", " <<food.rows <<", "<<food.cols<<endl;
+					//cout <<files[j]<<", " <<food.rows <<", "<<food.cols<<endl;
 					Mat foodEdge = Mat::zeros(userDraw.size(), CV_8UC4);
 					Mat foodEdgeAffine = Mat::zeros(userDraw.size(), CV_8UC4);
 					Mat foodStack = Mat::zeros(userDraw.size(), CV_8UC4);
@@ -229,11 +229,12 @@ int main()
 
 					//cout << tmpPairSeq.Element[k].warpMatrix.size()<<endl;
 
-					warpAffine(foodEdge, foodEdgeAffine, tmpPairSeq.Element[k].warpMatrix, foodEdgeAffine.size());
-					warpAffine(food, foodStack, tmpPairSeq.Element[k].warpMatrix, foodStack.size());
+					warpAffine(foodEdge, foodEdgeAffine, tmpPairSeq.Element[k].warpMatrix, foodEdge.size());
+					warpAffine(food, foodStack, tmpPairSeq.Element[k].warpMatrix, food.size());
+					imwrite("testI/"+to_string(i)+"_"+to_string(j)+"_"+to_string(tmpPairSeq.Element[k].iError)+".png",addTransparent(userDraw, foodStack));
 
 					int tmpp;
-					tmpPairSeq.Element[k].setError(edgeError(userDraw, foodEdgeAffine), colorError(userDraw,foodStack), refError(userDraw, foodEdgeAffine, tmpp));
+					tmpPairSeq.Element[k].setError(edgeError(userDraw, foodEdgeAffine), colorError(userDraw,foodStack), refError(userDraw, foodEdgeAffine, tmpp), tmpPairSeq.Element[k].iError);
 
 				}
 			}
@@ -251,55 +252,56 @@ int main()
 		cout <<i<<"'s candidate" <<foodCandidate.Element[i].Element.size()<<endl;
 
 
+	
+	int nextIndex = 0, nextFrag = 0, fragPtr = 0, preIndex;
+	double totalErr, preErr = 100000000;
+	double refErr = 0;
+	Mat resultStack, resultStackClone;
+	Mat stackEdge, stackEdgeClone;
+	int stackState = 0;
+	vector<string> cfSeq;
+	vector<int> contourVec, fragVec;
+	vector<double> errSeq;
+	vector<double> leafErr;
+	vector<vector<int> > contourMatchSeq;
+	tree<string> tr;
+	tree<string>::iterator root, findLoc;
+	vector<fragList> sortedFragList;
+	bool finish = false;
 	//
-	//int nextIndex = 0, nextFrag = 0, fragPtr = 0, preIndex;
-	//double totalErr, preErr = 100000000;
-	//double refErr = 0;
-	//Mat resultStack, resultStackClone;
-	//Mat stackEdge, stackEdgeClone;
-	//int stackState = 0;
-	//vector<string> cfSeq;
-	//vector<int> contourVec, fragVec;
-	//vector<double> errSeq;
-	//vector<double> leafErr;
-	//vector<vector<int> > contourMatchSeq;
-	//tree<string> tr;
-	//tree<string>::iterator root, findLoc;
-	//vector<fragList> sortedFragList;
-	//bool finish = false;
-	////
-	//for (int i = 0; i < disjointContour.size(); i++)
-	//{
-	//	fragList tmpFragList;
-	//	tmpFragList = vecSeqIndex(foodCandidate.Element[i]);
-	//	sortedFragList.push_back(tmpFragList);
-	//}
+	for (int i = 0; i < disjointContour.size(); i++)
+	{
+		fragList tmpFragList;
+		tmpFragList = vecSeqIndex(foodCandidate.Element[i]);
+		sortedFragList.push_back(tmpFragList);
+	}
 
 
-	///*
-	//for(int i = 0 ; i < 3 ; i++)
-	//{
-	//	for(int j = 0 ; j < 3 ; j++)
-	//	{
-	//		for(int m = 0 ; m < 3 ; m++)
-	//		{
-	//			for(int n = 0 ; n < 3 ; n++)
-	//			{
-	//				resultStack = Mat::zeros(userDraw.size(), CV_8UC4);
-	//				Mat resultStack_2 = resultStack.clone();
-	//				warpAffine(imread(dir+files[sortedFragList[0].Element[i].fIndex + 2], -1), resultStack, sortedFragList[0].Element[i].warpMatrix, resultStack.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
-	//				warpAffine(imread(dir+files[sortedFragList[1].Element[j].fIndex + 2], -1), resultStack_2, sortedFragList[1].Element[j].warpMatrix, resultStack_2.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
-	//				resultStack = addTransparent(resultStack, resultStack_2);
-	//				warpAffine(imread(dir+files[sortedFragList[2].Element[m].fIndex + 2], -1), resultStack_2, sortedFragList[2].Element[m].warpMatrix, resultStack_2.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
-	//				resultStack = addTransparent(resultStack, resultStack_2);
-	//				warpAffine(imread(dir+files[sortedFragList[3].Element[n].fIndex + 2], -1), resultStack_2, sortedFragList[3].Element[n].warpMatrix, resultStack_2.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
-	//				resultStack = addTransparent(resultStack, resultStack_2);
-	//				imwrite("testR\result"+to_string(i)+to_string(j)+to_string(m)+to_string(n)+".png", resultStack);
-	//			}
-	//		}
-	//	}
-	//}
-	//*/
+	
+	for(int i = 0 ; i < 3 ; i++)
+	{
+		for(int j = 0 ; j < 3 ; j++)
+		{
+			for(int m = 0 ; m < 3 ; m++)
+			{
+				for(int n = 0 ; n < 3 ; n++)
+				{
+					cout <<"i: "<<i<<", j: "<<j<<", m: "<<m<<", n: "<<n<<endl;
+					resultStack = Mat::zeros(userDraw.size(), CV_8UC4);
+					Mat resultStack_2 = resultStack.clone();
+					warpAffine(imread(dir+files[sortedFragList[0].Element[i].fIndex + 2], -1), resultStack, sortedFragList[0].Element[i].warpMatrix, resultStack.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
+					warpAffine(imread(dir+files[sortedFragList[1].Element[j].fIndex + 2], -1), resultStack_2, sortedFragList[1].Element[j].warpMatrix, resultStack_2.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
+					resultStack = addTransparent(resultStack, resultStack_2);
+					warpAffine(imread(dir+files[sortedFragList[2].Element[m].fIndex + 2], -1), resultStack_2, sortedFragList[2].Element[m].warpMatrix, resultStack_2.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
+					resultStack = addTransparent(resultStack, resultStack_2);
+					warpAffine(imread(dir+files[sortedFragList[3].Element[n].fIndex + 2], -1), resultStack_2, sortedFragList[3].Element[n].warpMatrix, resultStack_2.size(), CV_INTER_LINEAR, cv::BORDER_CONSTANT);
+					resultStack = addTransparent(resultStack, resultStack_2);
+					imwrite("testR/"+to_string(i)+to_string(j)+to_string(m)+to_string(n)+".png", resultStack);
+				}
+			}
+		}
+	}
+	
 
 	//
 
@@ -991,7 +993,6 @@ vector<string> split_str(string s, char ch)
 }
 
 void preProcess(vector<vector<Mat> >* p_foodDesSeq, vector<vector<Point> >* p_sampleResult) {
-	
 	int idx = 0;
 	int count = 0;
 
@@ -1010,8 +1011,7 @@ void preProcess(vector<vector<Mat> >* p_foodDesSeq, vector<vector<Point> >* p_sa
 	vector<Mat> buff_foodDesSeq;
 	vector<Point> buff_sampleResult;
 
-	for (int i = 0; i < get_foodDesSeq.size(); i++)
-	{
+	for (int i = 0; i < get_foodDesSeq.size(); i++)	{
 		buff_foodDesSeq.push_back(get_foodDesSeq[i]);
 		buff_sampleResult.push_back(get_sampleResult[i]);
 		count++;

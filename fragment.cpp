@@ -20,12 +20,13 @@ void frag::setInfo(int _r, int _q, int _l, int _fIndex, int _cIndex, double _sco
 	warpMatrix = _warpMatrix;
 }
 
-void frag::setError(double _eError, double _cError, double _rError)
+void frag::setError(double _eError, double _cError, double _rError, double _iError)
 {
 	eError = _eError;
 	cError = _cError;
 	rError = _rError;
-	sError = eError+cError+rError;
+	iError = _iError;
+	sError = eError+cError+rError+iError;
 }
 
 bool frag::theSame(frag A)
