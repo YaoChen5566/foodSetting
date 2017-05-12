@@ -22,7 +22,8 @@ public:
 	comp(Mat des1, vector<Mat> des2Seq);
 	comp();
 	comp(Mat des1, Mat des2);
-	comp(Mat des1, vector<Mat> des2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex);
+	comp(vector<Mat> des1, vector<Mat> des2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex);
+	comp(Mat foodImg, Mat mapRQ, vector<Point> pointSeq1, vector<Point> pointSeq2);
 
 	//frag fragment(int rS, int qS, int mL);
 
@@ -42,7 +43,7 @@ private:
 	void setInitial();
 	void setScoreThreshold();
 	void compareDes(Mat input1, Mat input2);
-	void compareDesN(Mat input1, Mat input2, int index);
+	void compareDesN(Mat input1, Mat input2, int index, bool cLarge);
 	void compareDesN2(Mat input1, Mat input2, int index);
 	void clearFrag();
 	void disFrag();
@@ -52,7 +53,7 @@ private:
 	void localMaxOfRQMap();
 	vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int matchL);
 	void get_Min_Max(Mat &rqmap, int windowSize);
-
+	double occupiedInterval();
 
 	int _startIndex1;
 	int _startIndex2;

@@ -41,6 +41,8 @@ descri::descri(vector<Point> contour)
 
 	//get descriptor
 	descriptor(_sampleResult);
+	//get seq descriptor
+	getSeqDescriptor(_sampleResult);
 	//return grayDescri;
 }
 
