@@ -21,13 +21,14 @@ public:
 
 	comp(Mat des1, vector<Mat> des2Seq);
 	comp();
-	comp(Mat des1, Mat des2);
-	comp(vector<Mat> des1, vector<Mat> des2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex);
+	comp(Mat des1, Mat des2, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex, Size drawSize);
+	comp(vector<Mat> des1, vector<Mat> des2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex, Size drawSize);
 	comp(Mat foodImg, Mat mapRQ, vector<Point> pointSeq1, vector<Point> pointSeq2);
 
 	//frag fragment(int rS, int qS, int mL);
 
 	vector<frag> fragList2();
+	vector<frag> fragList3();
 
 	vector<map<string, int> > fragList();
 
@@ -54,6 +55,9 @@ private:
 	vector<Point> subPointSeq(vector<Point> inputSeq, int startIndex, int matchL);
 	void get_Min_Max(Mat &rqmap, int windowSize);
 	double occupiedInterval();
+	void findCombination();
+	
+
 
 	int _startIndex1;
 	int _startIndex2;
@@ -68,8 +72,11 @@ private:
 	vector<Point> _minVec;
 	Mat _mapRQ; //RQmap with match length
 	Mat _mapScore; //RQmap with score
+	Mat _warpResult; // food after warping
+	Size _drawSize; //userDraw image size
 	vector<vector<Mat> > _warpMatrixMap; //RQmap with warpmatrix
 	vector<frag> _frag2;
+	vector<frag> _frag3;
 	vector<map<string, int> > _frag;
 	vector<map<string, int> > _totalFrag;
 	vector< map<string, int> > _clearResult;

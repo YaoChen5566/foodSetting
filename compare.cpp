@@ -9,6 +9,8 @@
 #include <algorithm>
 #include <map>
 #include <fstream>
+#include <dirent.h>
+
 
 #include "compare.h"
 #include "fragment.h"
@@ -27,16 +29,73 @@ bool compareWithLength(map<string, int> input1, map<string, int> input2)
 	return(i<j);
 }
 
+int getDir(string dir, vector<string> &files)
+{
+    DIR *dp;
+    struct dirent *dirp;
+    if((dp = opendir(dir.c_str())) == NULL)
+	{
+        cout << "Error(" << errno << ") opening " << dir << endl;
+        return errno;
+    }
+    while((dirp = readdir(dp)) != NULL)
+	{
+		files.push_back(string(dirp->d_name));
+    }
+    closedir(dp);
+    return 0;
+}
+
+Mat getNewDes(Mat des0, int startPointIndex)
+{
+	int delta = 3;
+	Mat resultDes = des0.clone();
+
+	for(int i = 0 ; i < (int)resultDes.rows ; i++)
+	{
+		for(int j = 0 ; j < (int)resultDes.cols ; j++)
+		{
+			if(abs(i-j) < delta)
+				resultDes.at<double>(i, j) = 0.0;
+			else
+			{
+				resultDes.at<double>(i, j) = des0.at<double>((i+startPointIndex)%resultDes.rows, (j+startPointIndex)%resultDes.cols);
+			}
+		}
+	}
+	imwrite("desSeq/"+to_string(startPointIndex)+".png", resultDes);
+	return resultDes;
+}
+
 // constructor
 comp::comp()
 {
 	setInitial();
 }
 
-comp::comp(Mat descri1, Mat descri2)
+comp::comp(Mat descri1, Mat descri2, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex, Size drawSize)
 {
+	_pointSeq1 = pointSeq1;
+	_pointSeq2 = pointSeq2;
+	_fIndex = foodIndex;
+	_cIndex = contourIndex;
+	_rDesSize = (int)pointSeq1.size();
+	_qDesSize = (int)pointSeq2.size();
+	_drawSize = drawSize;
 	setInitial();
-	compareDes(descri1, descri2);
+
+	if(pointSeq1.size() >= pointSeq2.size())
+		for(int i = 0 ; i < pointSeq1.size() ; i++)
+			compareDesN(getNewDes(descri1, i), descri2, i, true);
+	else
+	{
+		for(int i = 0 ; i < pointSeq2.size() ; i++)
+		{
+			compareDesN(descri1, getNewDes(descri2, i), i, false);
+		}
+	}
+
+	localMaxOfRQMap();
 }
 
 comp::comp(Mat descri1, vector<Mat> descri2Seq)
@@ -46,14 +105,15 @@ comp::comp(Mat descri1, vector<Mat> descri2Seq)
 		compareDesN(descri1, descri2Seq[i], i, true);
 }
 
-comp::comp(vector<Mat> descri1Seq, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex)
+comp::comp(vector<Mat> descri1Seq, vector<Mat> descri2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex, Size drawSize)
 {
 	_pointSeq1 = pointSeq1;
 	_pointSeq2 = pointSeq2;
 	_fIndex = foodIndex;
 	_cIndex = contourIndex;
-	_rDesSize = pointSeq1.size();
-	_qDesSize = pointSeq2.size();
+	_drawSize = drawSize;
+	_rDesSize = (int)pointSeq1.size();
+	_qDesSize = (int)pointSeq2.size();
 
 	setInitial();
 
@@ -71,11 +131,12 @@ comp::comp(vector<Mat> descri1Seq, vector<Mat> descri2Seq, vector<Point> pointSe
 	//for(int i = 0 ; i < descri2Seq.size() ; i++)
 	//	compareDesN(descri1, descri2Seq[i], i);
 
+	Mat mapRQ = _mapRQ.clone();
+
 	localMaxOfRQMap();
 
-	//Mat mapRQ = _mapRQ.clone();
-	Mat mapRQ = normalizeRQ();
-
+	//Mat mapRQ = normalizeRQ();
+	//imwrite("RQmap.png", mapRQ);
 	imwrite("RQ/"+to_string(contourIndex)+"_"+to_string(foodIndex)+".png", mapRQ);
 	//clearFrag();
 	//disFrag();
@@ -87,25 +148,25 @@ comp::comp(Mat foodImg, Mat mapRQ, vector<Point> pointSeq1, vector<Point> pointS
 	_pointSeq1 = pointSeq1;
 	_pointSeq2 = pointSeq2;
 	_mapRQ = mapRQ.clone();
-
-
 }
 
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 50.0;
+	_thresholdScore = 30.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
 	_mapRQ = Mat::zeros(Size(_qDesSize, _rDesSize), CV_32S); //Size(q, r): x is q, y is r
 	_mapScore = Mat::zeros(Size(_qDesSize, _rDesSize), CV_64F); //Size(q, r): x is q, y is r
+	_warpResult = Mat::zeros(_drawSize, CV_8UC4);
 	//Mat _warpMatrixMap[_rDesSize][_qDesSize];
 	Mat tmp = Mat::zeros(Size(3, 2), CV_64F);
 	_warpMatrixMap.resize(_qDesSize, vector<Mat>(_rDesSize, tmp)); //Size(q, r): x id q, y is r
+
 }
 
-//two single image
+//two single descriptor
 void comp::compareDes(Mat input1, Mat input2)
 {
 	
@@ -209,7 +270,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index, bool cLarge)
 	double tmpSum = 0;
 	double getScore = 0;
 	integral(sub, integral1, integral2);
-	rLim = 0.4*integral2.cols; // square size
+	rLim = (int)0.4*integral2.cols; // square size
 
 
 	for(int i = 0 ; i < integral2.cols ; i++)
@@ -226,22 +287,24 @@ void comp::compareDesN(Mat input1, Mat input2, int index, bool cLarge)
 			_startIndex2 = (i+index)%input2.cols;
 		}
 
+
+
 		for(int r = integral2.cols ; r > rLim ; r--)
 		{
 			_range = r;
 			//cout <<"startIndex1: "<<_startIndex1<<", startIndex2: "<<_startIndex2<<", range: "<<_range<<endl;
 
-			if( (i+r) <= integral2.cols)
+			if( (i+r) < integral2.cols)
 			{
 				tmpSum = integral2.at<double>(i, i) + integral2.at<double>(i+r, i+r)-integral2.at<double>(i, i+r)-integral2.at<double>(i+r, i);
 			
 			}
 			//else
 			//{
-			//	tmpSum += integral2.at<double>((i+r)%sub.rows, (i+r)%sub.cols); //[y, y]
+			//	tmpSum += integral2.at<double>((i+r)%integral2.rows, (i+r)%integral2.cols); //[y, y]
 			//	tmpSum += integral2.at<double>(integral2.rows, integral2.cols)+integral2.at<double>(i, i)-integral2.at<double>(i, integral2.cols)-integral2.at<double>(integral2.rows, i); //[x, x]
-			//	tmpSum += integral2.at<double>((i+r)%sub.rows, sub.cols)-integral2.at<double>((i+r)%sub.rows, i); //[y, cols]
-			//	tmpSum += integral2.at<double>(sub.rows, (i+r)%sub.cols)-integral2.at<double>(i, (i+r)%sub.cols); //[cols, y]
+			//	tmpSum += integral2.at<double>((i+r)%integral2.rows, integral2.cols)-integral2.at<double>((i+r)%integral2.rows, i); //[y, cols]
+			//	tmpSum += integral2.at<double>(integral2.rows, (i+r)%integral2.cols)-integral2.at<double>(i, (i+r)%integral2.cols); //[cols, y]
 			//}
 
 			getScore = tmpSum/pow(r,2);
@@ -276,7 +339,7 @@ void comp::compareDesN2(Mat input1, Mat input2, int index)
 	Mat integral1; // sum
 	Mat integral2; // square sum
 
-	int rLim = 0.4*input1.cols; // square size
+	int rLim = (int)0.5*input1.cols; // square size
 	int lefttopPoint1 = 0;
 	int lefttopPoint2 = 0;
 	double tmpSum = 0;
@@ -307,17 +370,17 @@ void comp::compareDesN2(Mat input1, Mat input2, int index)
 			_startIndex1 = i;
 			_startIndex2 = i+index;		
 
-			map<string, int> fragment;
+			//map<string, int> fragment;
 
-			fragment["r"] = _startIndex1;
-			fragment["q"] = _startIndex2;
-			fragment["l"] = _range;
-			fragment["fIndex"] = _fIndex;
-			fragment["cIndex"] = _cIndex;
-			fragment["score"] = getScore;
+			//fragment["r"] = _startIndex1;
+			//fragment["q"] = _startIndex2;
+			//fragment["l"] = _range;
+			//fragment["fIndex"] = _fIndex;
+			//fragment["cIndex"] = _cIndex;
+			//fragment["score"] = getScore;
 
 			//_frag.push_back(fragment);
-			_totalFrag.push_back(fragment);
+			//_totalFrag.push_back(fragment);
 
 		}
 	}
@@ -343,6 +406,11 @@ Mat comp::normalizeRQ()
 // find the local maximum of RQ map
 void comp::localMaxOfRQMap()
 {
+	string dir = string("foodImg/");
+	vector<string> files = vector<string>();
+	getDir(dir, files);
+
+	cout << dir+files[_fIndex]<<endl;
 
 	int maxVal = -1;
 	int maxR = -1;
@@ -373,14 +441,17 @@ void comp::localMaxOfRQMap()
 
 		vector<Point> newPointSeq;
 				
+		cout << warpMat.size()<<endl;
 		for(int p = 0 ; p < _pointSeq2.size() ; p++)
 		{
 			double newX = warpMat.at<double>(0, 0)*_pointSeq2[p].x + warpMat.at<double>(0, 1)*_pointSeq2[p].y + warpMat.at<double>(0, 2);
 			double newY = warpMat.at<double>(1, 0)*_pointSeq2[p].x + warpMat.at<double>(1, 1)*_pointSeq2[p].y + warpMat.at<double>(1, 2);
 			newPointSeq.push_back(Point((int) newX, (int) newY));
 		}
-		
-		fragMax.setInfo(maxR, maxQ, maxVal, _fIndex, _cIndex, _mapScore.at<double>(maxR, maxQ), warpMat);
+
+		Mat dood = imread(dir+files[_fIndex], -1);
+		warpAffine(dood, _warpResult, warpMat, _warpResult.size());
+		fragMax.setInfo(maxR, maxQ, maxVal, _mapScore.at<double>(maxR, maxQ), _cIndex, _fIndex, warpMat, _warpResult);
 		fragMax.setError(0, 0, 0, imageOverlap(newPointSeq));
 		_frag2.push_back(fragMax);
 	}
@@ -668,71 +739,12 @@ vector<Point> comp::subPointSeq(vector<Point> inputSeq, int startIndex, int matc
 {
 	vector<Point> result;
 
-	//result.push_back(inputSeq[startIndex%inputSeq.size()]);
-	//result.push_back(inputSeq[(startIndex+matchL/2)%inputSeq.size()]);
-	//result.push_back(inputSeq[(startIndex+matchL-1)%inputSeq.size()]);
-
 	for(int i = 0 ; i < matchL ; i++)
 	{
 		result.push_back(inputSeq[(startIndex+i)%inputSeq.size()]);
 	}
 	return result;
 }
-
-/*
-void comp::localMaxOfRQMap() {
-
-	clock_t t1, t2;
-	t1 = clock();
-	get_Min_Max(_mapRQ, 14);
-	t2 = clock();
-	//cout << "get_min_max= " << (t2 - t1) << endl;
-
-	for (int i = 0; i < _maxVec.size(); i++) {
-		_startIndex1 = _maxVec[i].x;
-		_startIndex2 = _maxVec[i].y;
-
-		if (_mapRQ.at<int>(_startIndex1, _startIndex2) > 0) {
-			//cout << "localMaxOfRQMap= " << _startIndex1 << ", " << _startIndex2 << endl;
-
-			frag fragMax;
-			fragMax.setInfo(_startIndex1, _startIndex2, _mapRQ.at<int>(_startIndex1, _startIndex2), _fIndex, _cIndex, _mapScore.at<int>(_startIndex1, _startIndex2), _warpMatrixMap[_startIndex1][_startIndex2]);
-			_frag2.push_back(fragMax);
-		}
-	}
-	//cout << "_frag.size= " << _frag.size();
-}
-
-// get min and max
-void comp::get_Min_Max(Mat &rqmap, int windowSize) {
-	int maximum, minimum;
-	Point maxP, minP;
-	_maxVec.clear();
-	_minVec.clear();
-
-	for (int i = 0; i < rqmap.cols; i += windowSize) {
-		for (int j = 0; j < rqmap.rows; j += windowSize) {
-
-			maximum = -1;
-			minimum = 100;
-			for (int m = 0; m < windowSize; m++) {
-				for (int n = 0; n < windowSize; n++) {
-					if (rqmap.at<int>(i + m, j + n) > maximum) {
-						maximum = rqmap.at<int>(i + m, j + n);
-						maxP = Point(i + m, j + n);
-					}
-					if (rqmap.at<int>(i + m, j + n) < minimum) {
-						minimum = rqmap.at<int>(i + m, j + n);
-						minP = Point(i + m, j + n);
-					}
-				}
-			}
-			_maxVec.push_back(maxP);
-			_minVec.push_back(minP);
-		}
-	}
-}
-*/
 
 double comp::imageOverlap(vector<Point> newPointSeq)
 {
@@ -751,8 +763,8 @@ double comp::imageOverlap(vector<Point> newPointSeq)
 
 	for (int i = 0; i < imgSize.width; i++) {
 		for (int j = 0; j < imgSize.height; j++) {
-			contour_dist.at<float>(j, i) = pointPolygonTest(_pointSeq1, Point2f(i, j), true);
-			food_dist.at<float>(j, i) = pointPolygonTest(newPointSeq, Point2f(i, j), true);
+			contour_dist.at<float>(j, i) = pointPolygonTest(_pointSeq1, Point(i, j), true);
+			food_dist.at<float>(j, i) = pointPolygonTest(newPointSeq, Point(i, j), true);
 
 			//calculate contour area
 			if (contour_dist.at<float>(j, i) > 0) {
@@ -791,56 +803,7 @@ double comp::imageOverlap(vector<Point> newPointSeq)
 
 	return 1/(ratio1*ratio2);
 }
-/*
-double comp::occupiedInterval()
-{
-	vector<bool> occupiedSet(_mapRQ.rows, false);
-
-	while((1-percent(occupiedSet)) < 0.1 )
-	{
-		int maxVal = -1;
-		int maxR = -1;
-		int maxQ = -1;
-
-		// find global maximum in RQmap
-		for(int i = 0 ; i < _mapRQ.rows ; i++)
-		{
-			for(int j = 0 ; j < _mapRQ.cols ; j++)
-			{
-				if(_mapRQ.at<int>(i, j) > maxVal)
-				{
-					maxVal = -1;
-					maxR = -1;
-					maxQ = -1;
-				}
-			}
-		}
-
-		if(maxVal > 0 && maxR != -1 && maxQ != -1)
-		{
-			for(int i = 0 ; i < maxVal ; i++)
-			{
-				occupiedSet[(maxR+i)%_mapRQ.rows] = true;
-			}
-		}
 
 
-	}
 
-	
-}
 
-double percent(vector<bool> occupied)
-{
-	vector<bool>::iterator iterB;
-
-	int trueTimes = 0;
-
-	for(iterB = occupied.begin() ; iterB != occupied.end() ; iterB++)
-		if(*iterB == true)
-			trueTimes++;
-	
-	return trueTimes/(int)occupied.size();
-
-}
-*/

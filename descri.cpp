@@ -52,7 +52,7 @@ void descri::imgToDes(Mat input)
 {
 	//cout <<"not resort"<<endl;
 	// resize input image
-	Mat inputScaleTwo;
+	
 	//resize(input, inputScaleTwo, Size(input.cols*2, input.rows*2) );
 
 	//to binary image with alpha value
@@ -213,21 +213,21 @@ void descri::descriptor(vector<Point> samplePoints)
 			
 			if(abs(int((i)-(j))) < delta)
 			{
-				shapeDes.at<double>(i,i) = 0;
+				shapeDes.at<double>(i,j) = 0;
 			}
 			else 
 			{
 				if(i > j)
-					pjMinusDelta = samplePoints[j+delta];
+					pjMinusDelta = samplePoints[(j+delta)%pointsNum];
 				else
-					pjMinusDelta = samplePoints[j-delta];
+					pjMinusDelta = samplePoints[(j-delta)%pointsNum];
 
 				tmp = angle(pi, pj, pjMinusDelta);
 				shapeDes.at<double>(i,j) = tmp;
 			}
 		}
 	}
-	_resultDescri = shapeDes;
+	_resultDescri = shapeDes.clone();
 	//return shapeDes;
 }
 
@@ -262,9 +262,9 @@ void descri::getSeqDescriptor(vector<Point> samplePoints)
 				else 
 				{
 					if(i > j)
-						pjMinusDelta = samplePoints[j+delta];
+						pjMinusDelta = samplePoints[((j+n)+delta)%pointsNum];
 					else
-						pjMinusDelta = samplePoints[j-delta];
+						pjMinusDelta = samplePoints[((j+n)-delta)%pointsNum];
 
 					tmp = angle(pi, pj, pjMinusDelta);
 					shapeDes.at<double>(i,j) = tmp;

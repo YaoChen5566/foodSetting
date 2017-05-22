@@ -21,13 +21,14 @@ public:
 	int cIndex; //contour index
 	double score; //fragment score
 	Mat warpMatrix; //warping matrix
+	Mat warpResult; //food after warping
 	double eError; //edge error
 	double cError; //color error
 	double rError; //reference error
 	double sError; //sum of three error
 	double iError; //intersection error
 
-	void setInfo(int _r, int _q, int _l, int _fIndex, int _cIndex, double _score, Mat _warpMatrix);
+	void setInfo(int _r, int _q, int _l, double _score, int _cIndex, int _fIndex, Mat _warpMatrix, Mat warpResult);
 	void setError(double _eError, double _cError, double _rError, double _iError);
 	bool theSame(frag A);
 private:

@@ -9,7 +9,7 @@ frag::frag()
 	
 }
 
-void frag::setInfo(int _r, int _q, int _l, int _fIndex, int _cIndex, double _score, Mat _warpMatrix)
+void frag::setInfo(int _r, int _q, int _l, double _score, int _cIndex, int _fIndex, Mat _warpMatrix, Mat _warpResult)
 {
 	r = _r;
 	q = _q;
@@ -18,6 +18,7 @@ void frag::setInfo(int _r, int _q, int _l, int _fIndex, int _cIndex, double _sco
 	cIndex = _cIndex;
 	score = _score;
 	warpMatrix = _warpMatrix;
+	warpResult = _warpResult;
 }
 
 void frag::setError(double _eError, double _cError, double _rError, double _iError)

@@ -40,6 +40,8 @@ vector<string> files = vector<string>();
 
 //single test
 void singleTest(void);
+//get test img
+void testImg(void);
 //warp test
 void warpTest(void);
 // err test
@@ -126,6 +128,7 @@ void print_tree(const tree<std::string>& tr, tree<std::string>::pre_order_iterat
 
 int main()
 {
+	
 	//Mat userDraw = imread("test/star.png", -1);
 	Mat userDraw = imread("inputImg/rabbitSingle.png", -1);
 
@@ -140,7 +143,7 @@ int main()
 
 	for(int i = 0 ; i < userDrawContours.size() ; i++)
 	{
-		if(userDrawContours[i].size()>70 && hierarchy[i][3] != -1)
+		if(userDrawContours[i].size()>50 && hierarchy[i][3] != -1)
 			disjointContour.push_back(userDrawContours[i]);
 	}
 
@@ -170,7 +173,7 @@ int main()
 	for(int i = 0 ; i < disjointContour.size() ; i++)
 	{
 		descri descriUser(disjointContour[i]);
-		cout << descriUser.seqDescri().size()<<endl;
+		//cout << descriUser.seqDescri().size()<<endl;
 
 		desOfDraw.push_back(descriUser.seqDescri());
 		samplepointsOfDraw.push_back(descriUser.sampleResult());
@@ -179,7 +182,6 @@ int main()
 	vector<vector<Mat> > desOfFood;
 	vector<vector<Point> > samplepointsOfFood;
 	preProcess(&desOfFood, &samplepointsOfFood);
-
 
 	cout << "pre-process done"<<endl;
 
@@ -197,14 +199,14 @@ int main()
 		
 		for(int j = 2 ; j < files.size()-1 ; j++)
 		{
+			cout <<"file: "<<files[j]<<endl;
 
-			comp compDes(desOfDraw[i],desOfFood[j-2], samplepointsOfDraw[i], samplepointsOfFood[j-2], i, j-2);
+			comp compDes(desOfDraw[i], desOfFood[j-2], samplepointsOfDraw[i], samplepointsOfFood[j-2], i, j, userDraw.size());
 			//comp compDes(desOfDraw[i], desFood.seqDescri(), samplepointsOfDraw[i], desFood.sampleResult(), i, j);
 
 			fragList tmpPairSeq; 
 			tmpPairSeq.Element = compDes.fragList2();
 
-			//cout <<"file: "<<files[j]<<endl;
 			//cout << tmpPairSeq.Element.size()<<endl;
 
 			if(tmpPairSeq.Element.size() > 0)
@@ -221,7 +223,6 @@ int main()
 
 					string foodImg = dir + files[j];
 					Mat food = imread(foodImg, -1);
-					//cout <<files[j]<<", " <<food.rows <<", "<<food.cols<<endl;
 					Mat foodEdge = Mat::zeros(userDraw.size(), CV_8UC4);
 					Mat foodEdgeAffine = Mat::zeros(userDraw.size(), CV_8UC4);
 					Mat foodStack = Mat::zeros(userDraw.size(), CV_8UC4);
@@ -235,11 +236,11 @@ int main()
 					warpAffine(food, foodStack, tmpPairSeq.Element[k].warpMatrix, food.size());
 					Mat addUF = addTransparent(userDraw, foodStack);
 
-					for(int ii = 0 ; ii < tmpPairSeq.Element[k].l ; ii++)
-					{
-						circle(addUF, samplepointsOfDraw[tmpPairSeq.Element[k].cIndex][(ii+tmpPairSeq.Element[k].r)%samplepointsOfDraw.size()], 1, Scalar(0, 255*(tmpPairSeq.Element[k].l-ii), 0, 255), 1);
-						//circle(addUF, samplepointsOfDraw[tmpPairSeq.Element[k].cIndex][(ii+tmpPairSeq.Element[k].q)%samplepointsOfFood.size()], 1, Scalar(0, 255*(tmpPairSeq.Element[k].l-ii), 0, 255), 1);
-					}
+					//for(int ii = 0 ; ii < tmpPairSeq.Element[k].l ; ii++)
+					//{
+					//	circle(addUF, samplepointsOfDraw[tmpPairSeq.Element[k].cIndex][(ii+tmpPairSeq.Element[k].r)%samplepointsOfDraw.size()], 1, Scalar(0, 255*(tmpPairSeq.Element[k].l-ii), 0, 255), 1);
+					//	//circle(addUF, samplepointsOfDraw[tmpPairSeq.Element[k].cIndex][(ii+tmpPairSeq.Element[k].q)%samplepointsOfFood.size()], 1, Scalar(0, 255*(tmpPairSeq.Element[k].l-ii), 0, 255), 1);
+					//}
 
 					imwrite("testI/"+to_string(j)+"_"+to_string(k)+"_"+to_string(tmpPairSeq.Element[k].iError)+".png",addUF);
 
@@ -280,30 +281,40 @@ int main()
 
 	}
 
+	
+	int nextIndex = 0, nextFrag = 0, fragPtr = 0, preIndex;
+	double totalErr, preErr = 100000000;
+	double refErr = 0;
+	Mat resultStack, resultStackClone;
+	Mat stackEdge, stackEdgeClone;
+	int stackState = 0;
+	vector<string> cfSeq;
+	vector<int> contourVec, fragVec;
+	vector<double> errSeq;
+	vector<double> leafErr;
+	vector<vector<int> > contourMatchSeq;
+	tree<string> tr;
+	tree<string>::iterator root, findLoc;
+	vector<fragList> sortedFragList;
+	bool finish = false;
 	//
-	//int nextIndex = 0, nextFrag = 0, fragPtr = 0, preIndex;
-	//double totalErr, preErr = 100000000;
-	//double refErr = 0;
-	//Mat resultStack, resultStackClone;
-	//Mat stackEdge, stackEdgeClone;
-	//int stackState = 0;
-	//vector<string> cfSeq;
-	//vector<int> contourVec, fragVec;
-	//vector<double> errSeq;
-	//vector<double> leafErr;
-	//vector<vector<int> > contourMatchSeq;
-	//tree<string> tr;
-	//tree<string>::iterator root, findLoc;
-	//vector<fragList> sortedFragList;
-	//bool finish = false;
-	////
-	//for (int i = 0; i < disjointContour.size(); i++)
-	//{
-	//	fragList tmpFragList;
-	//	tmpFragList = vecSeqIndex(foodCandidate.Element[i]);
-	//	sortedFragList.push_back(tmpFragList);
-	//}
+	for (int i = 0; i < disjointContour.size(); i++)
+	{
+		fragList tmpFragList;
+		tmpFragList = vecSeqIndex(foodCandidate.Element[i]);
+		tmpFragList.Element.erase(tmpFragList.Element.begin()+2, tmpFragList.Element.end());
+		sortedFragList.push_back(tmpFragList);
+	}
 
+		
+	for(int i = 0 ; i < sortedFragList.size() ; i++)
+	{
+		for(int j = 0 ; j < sortedFragList[i].Element.size() ; j++)
+		{
+			cout << sortedFragList[i].Element[j].sError << " ";
+		}
+		cout << endl;
+	}
 
 	//
 	//for(int i = 0 ; i < 3 ; i++)
@@ -338,15 +349,7 @@ int main()
 
 	////nextFrag = contourMatchSeq[nextIndex][0];
 
-	//
-	//for(int i = 0 ; i < sortedFragList.size() ; i++)
-	//{
-	//	for(int j = 0 ; j < sortedFragList[i].Element.size() ; j++)
-	//	{
-	//		cout << sortedFragList[i].Element[j].sError << " ";
-	//	}
-	//	cout << endl;
-	//}
+
 
 	//errSeq.push_back(preErr);
 
@@ -472,6 +475,7 @@ int main()
 
 
 	//singleTest();
+	//testImg();
 	//errTest();
 	system("Pause");
 }
@@ -482,22 +486,28 @@ void singleTest(void)
 
 
 	//clock_t start = clock(); // compare start
-	string tmp = "foodImg/head.png";
-	string tmp2 = "foodImg/086.png";
+	string tmp = "errortest/inin.png";
+	string tmp2 = "foodImg/113.png";
 	Mat input1 = imread(tmp, -1);
 	Mat input2 = imread(tmp2, -1);
 
 	descri descri1(tmp);
-	Mat inputDes1 = descri1.resultDescri();
+	Mat inputDes1 = descri1.resultDescri().clone();
 	descri descri2(tmp2);
 	Mat inputDes2 = descri2.resultDescri();
 	vector<Mat> inputDesSeq2 = descri2.seqDescri();
+
+	for(int i = 0 ; i < inputDesSeq2.size() ; i++)
+	{
+		imwrite("desSeq/"+to_string(i)+"_.png", inputDesSeq2[i]);
+	}
 
 	imwrite("des1.png", inputDes1);
 	imwrite("des2.png", inputDes2);
 
 	clock_t start = clock(); // compare finish
-	comp compDes(inputDes1, inputDesSeq2, descri1.sampleResult(), descri2.sampleResult(), 0, 0);
+	//comp compDes(inputDes1, inputDes2, descri1.sampleResult(), descri2.sampleResult(), 0, 75+2, input1.size());
+	comp compDes(descri1.seqDescri(), descri2.seqDescri(), descri1.sampleResult(), descri2.sampleResult(), 0, 103+2, input1.size());
 	clock_t finish = clock(); // compare finish
 	cout << finish - start<<endl;
 	fragList tmpppp;
@@ -524,7 +534,7 @@ void singleTest(void)
 	{
 		warpAffine(input2, warpingResult, tmpppp.Element[i].warpMatrix, warpingResult.size());
 		warpAffine(foodEdge, foodEdgeAffine, tmpppp.Element[i].warpMatrix, foodEdgeAffine.size());
-		imwrite("testR/_"+to_string(i)+".png", warpingResult);
+		imwrite("testR/_"+to_string(i)+".png", tmpppp.Element[i].warpResult);
 		//imwrite("testR/_"+to_string(i)+"e.png", foodEdgeAffine);
 	}
 
@@ -533,6 +543,57 @@ void singleTest(void)
 	//warpAffine(input2, warpingResult, warp_mat, warpingResult.size());
 	//imwrite("warping.png", warpingResult);
 }
+
+//get test img
+//void testImg(void)
+//{
+//	Mat userDraw = imread("inputImg/inin2.png", -1);
+//
+//	Mat cannyColor = cannyThreeCh(userDraw, true);
+//
+//	vector<vector<Point> > userDrawContours;
+//	vector<Vec4i> hierarchy;
+//
+//	findContours(cannyColor.clone(), userDrawContours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_NONE, Point(0, 0) );
+//	
+//	vector<vector<Point> > disjointContour;
+//
+//	for(int i = 0 ; i < userDrawContours.size() ; i++)
+//	{
+//		if(/*userDrawContours[i].size()>70 && */hierarchy[i][3] != -1)
+//			disjointContour.push_back(userDrawContours[i]);
+//	}
+//
+//	sort(disjointContour.begin(), disjointContour.end(), compareContourSize);
+//
+//	descri descri1(disjointContour[0]);
+//	vector<Mat> des1 = descri1.seqDescri();
+//	vector<Point> seq1 = descri1.sampleResult();
+//
+//	string tmp2 = "foodImg/086.png";
+//	Mat input2 = imread(tmp2, -1);
+//	descri descri2(tmp2);
+//	vector<Mat> des2 = descri2.seqDescri();
+//	vector<Point> seq2 = descri2.sampleResult();
+//
+//	cout << seq1.size() <<" "<<seq2.size()<<endl;
+//	cout << "!!!"<<endl;
+//	comp com(des1, des2, seq1, seq2, 0, 0);
+//
+//	fragList fragL;
+//	fragL.Element= com.fragList2();
+//
+//	cout << fragL.Element.size();
+//
+//	Mat warpingResult = userDraw.clone();
+//	for(int i = 0 ; i < fragL.Element.size() ; i++)
+//	{
+//		warpAffine(input2, warpingResult, fragL.Element[i].warpMatrix, warpingResult.size());
+//		imwrite("testR/_8"+to_string(i)+".png", warpingResult);
+//		//imwrite("testR/_"+to_string(i)+"e.png", foodEdgeAffine);
+//	}
+//
+//}
 
 //warp test
 void warpTest(void)
@@ -554,15 +615,15 @@ void warpTest(void)
 //err test
 void errTest(void)
 {
-	//string path1 = "errorTest/inin.pnh";
+	//string path1 = "errorTest/inin.png";
 	//string path2 = "errorTest/_0.png";
-	Mat origin = imread("errorTest/inin.png", -1);
-	Mat warp0 = imread("errorTest/_0e.png", -1);
-	Mat warp1 = imread("errorTest/_1e.png", -1);
-	Mat warp2 = imread("errorTest/_2e.png", -1);
-	Mat warp3 = imread("errorTest/_3e.png", -1);
+	//Mat origin = imread("errorTest/inin.png", -1);
+	//Mat warp0 = imread("errorTest/_0e.png", -1);
+	//Mat warp1 = imread("errorTest/_1e.png", -1);
+	//Mat warp2 = imread("errorTest/_2e.png", -1);
+	//Mat warp3 = imread("errorTest/_3e.png", -1);
 
-	Mat fail = imread("errorTest/erre.png", -1);
+	//Mat fail = imread("errorTest/erre.png", -1);
 	//cout << edgeError(origin, warp0)<<endl;
 	//cout << edgeError(origin, warp1)<<endl;
 	//cout << edgeError(origin, warp2)<<endl;
@@ -570,19 +631,26 @@ void errTest(void)
 	//cout << edgeError(origin, fail)<<endl;
 
 
-	Mat origin2 = imread("errorTest/inin2.png", -1);
-	Mat ref0 = imread("errorTest/_0.png", -1);
-	Mat ref1 = imread("errorTest/_0_2.png", -1);
-	Mat ref2 = imread("errorTest/_0_3.png", -1);
-	int tmp;
-	cout <<"reference error: "<<refError(origin2, ref0, tmp)<<endl;
-	cout <<"next Index: "<< tmp <<endl;
-	cout <<"reference error: "<< refError(origin2, ref1, tmp)<<endl;
-	cout << "next Index: "<<tmp <<endl;
-	cout <<"reference error: "<< refError(origin2, ref2, tmp)<<endl;
-	cout << "next Index: "<<tmp <<endl;
+	//Mat origin2 = imread("errorTest/inin2.png", -1);
+	//Mat ref0 = imread("errorTest/_0.png", -1);
+	//Mat ref1 = imread("errorTest/_0_2.png", -1);
+	//Mat ref2 = imread("errorTest/_0_3.png", -1);
+	//int tmp;
+	//cout <<"reference error: "<<refError(origin2, ref0, tmp)<<endl;
+	//cout <<"next Index: "<< tmp <<endl;
+	//cout <<"reference error: "<< refError(origin2, ref1, tmp)<<endl;
+	//cout << "next Index: "<<tmp <<endl;
+	//cout <<"reference error: "<< refError(origin2, ref2, tmp)<<endl;
+	//cout << "next Index: "<<tmp <<endl;
 
+	Mat src = imread("inputImg/inin2.png", -1);
+	Mat color1 = imread("testR/_0.png", -1);
+	Mat color2 = imread("testR/_80.png", -1);
+	Mat color3 = imread("testR/_e0.png", -1);
 
+	cout << "color error1: "<< colorError(src, color1)<<endl;
+	cout << "color error2: "<< colorError(src, color2)<<endl;
+	cout << "color error3: "<< colorError(src, color3)<<endl;
 }
 
 //add image with transparent background
