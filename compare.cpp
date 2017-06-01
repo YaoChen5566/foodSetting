@@ -408,7 +408,7 @@ void comp::localMaxOfRQMap()
 			Mat dood = imread(dir+files[_fIndex], -1);
 			warpAffine(dood, _warpResult, warpMat, _warpResult.size());
 			fragMax.setInfo(maxR, maxQ, maxVal, _mapScore.at<double>(maxR, maxQ), _cIndex, _fIndex, warpMat, _warpResult);
-			fragMax.setError(0, 0, 0, imageOverlap(newPointSeq));
+			fragMax.setError(0, 0, 0, imageOverlap(newPointSeq), _ratio1);
 			_frag2.push_back(fragMax);
 		}
 	}
@@ -740,8 +740,8 @@ double comp::imageOverlap(vector<Point> newPointSeq)
 	}
 
 
-	double ratio1 = (double)overlapArea / (double)contourArea;
-	double ratio2 = (double)overlapArea / (double)foodArea;
+	double ratio1 = (double)overlapArea / (double)contourArea; // contour 
+	double ratio2 = (double)overlapArea / (double)foodArea; // food
 	//cout << "ratio1= " << ratio1 << ", ratio2= " << ratio2 << endl;
 	//cout << endl;
 
@@ -757,7 +757,7 @@ double comp::imageOverlap(vector<Point> newPointSeq)
 	{
 		return false;
 	}*/
-
+	_ratio1 = 1/ratio1;
 	return 1/(ratio1*ratio2);
 }
 

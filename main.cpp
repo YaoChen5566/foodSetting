@@ -663,8 +663,8 @@ void recipeTest(void)
 {
 	recipe rec1;
 	rec1.addFood(5, 2, "steak", true);
-	rec1.addFood(2, 10, "carrot", false);
-	rec1.reduceFood(2);
+	rec1.addFood(3, 10, "carrot", false);
+	rec1.reduceFood(3);
 	rec1.writeRecipeFile("steak.bin");
 
 	recipe rec2;

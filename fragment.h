@@ -27,9 +27,10 @@ public:
 	double rError; //reference error
 	double sError; //sum of three error
 	double iError; //intersection error
+	double iErrorRatio1; // intersection error for contour
 
 	void setInfo(int _r, int _q, int _l, double _score, int _cIndex, int _fIndex, Mat _warpMatrix, Mat warpResult);
-	void setError(double _eError, double _cError, double _rError, double _iError);
+	void setError(double _eError, double _cError, double _rError, double _iError, double _iErrorRatio1);
 	bool theSame(frag A);
 private:
 

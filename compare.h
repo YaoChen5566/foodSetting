@@ -67,6 +67,8 @@ private:
 	double _score;
 	int _rDesSize;
 	int _qDesSize;
+	double _ratio1;
+
 	vector<Point> _maxVec;
 	vector<Point> _minVec;
 	Mat _mapRQ; //RQmap with match length

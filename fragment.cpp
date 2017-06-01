@@ -21,12 +21,13 @@ void frag::setInfo(int _r, int _q, int _l, double _score, int _cIndex, int _fInd
 	warpResult = _warpResult;
 }
 
-void frag::setError(double _eError, double _cError, double _rError, double _iError)
+void frag::setError(double _eError, double _cError, double _rError, double _iError, double _iErrorRatio1)
 {
 	eError = _eError;
 	cError = _cError;
 	rError = _rError;
 	iError = _iError;
+	iErrorRatio1 = _iErrorRatio1;
 	sError = eError+cError+rError+iError;
 }
 
