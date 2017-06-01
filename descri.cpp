@@ -135,7 +135,7 @@ int descri::maxContour(vector<vector<Point>> contours)
 			maxIndex = i;
 		}
 	}
-	cout << "maxsize: "<<maxSize<<endl;
+	//cout << "maxsize: "<<maxSize<<endl;
 	return maxIndex;
 }
 
@@ -209,8 +209,24 @@ void descri::descriptor(vector<Point> samplePoints)
 		{
 			pi = samplePoints[i];
 			pj = samplePoints[j];
+
+			
+			if(i > j)
+			{
+				pjMinusDelta = samplePoints[(j+delta)%pointsNum];
+			}
+			else
+			{
+				if((j-delta)<0)
+					pjMinusDelta = samplePoints[(j-delta+pointsNum)%pointsNum];
+				else
+					pjMinusDelta = samplePoints[(j-delta)%pointsNum];
+			}
+			tmp = angle(pi, pj, pjMinusDelta);
+			shapeDes.at<double>(i,j) = tmp;
 			
 			
+			/*
 			if(abs(int((i)-(j))) < delta)
 			{
 				shapeDes.at<double>(i,j) = 0;
@@ -225,6 +241,7 @@ void descri::descriptor(vector<Point> samplePoints)
 				tmp = angle(pi, pj, pjMinusDelta);
 				shapeDes.at<double>(i,j) = tmp;
 			}
+			*/
 		}
 	}
 	_resultDescri = shapeDes.clone();
@@ -253,8 +270,23 @@ void descri::getSeqDescriptor(vector<Point> samplePoints)
 				
 				pi = samplePoints[(i+n)%pointsNum];
 				pj = samplePoints[(j+n)%pointsNum];
+				
+				if(i > j)
+				{
+					pjMinusDelta = samplePoints[((j+n)+delta)%pointsNum];
+				}
+				else
+				{
+				/*	if((j-delta)<0)
+						pjMinusDelta = samplePoints[(j-delta+pointsNum)];
+					else*/
+						pjMinusDelta = samplePoints[((j+n)-delta)%pointsNum];
+				}
+				tmp = angle(pi, pj, pjMinusDelta);
+				shapeDes.at<double>(i,j) = tmp;
+				
 			
-			
+				/*
 				if(abs(int((i)-(j))) < delta)
 				{
 					shapeDes.at<double>(i,j) = 0;
@@ -269,6 +301,7 @@ void descri::getSeqDescriptor(vector<Point> samplePoints)
 					tmp = angle(pi, pj, pjMinusDelta);
 					shapeDes.at<double>(i,j) = tmp;
 				}
+				*/
 			}
 		}
 		_seqDescri.push_back(shapeDes);

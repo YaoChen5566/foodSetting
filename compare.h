@@ -21,7 +21,6 @@ public:
 
 	comp(Mat des1, vector<Mat> des2Seq);
 	comp();
-	comp(Mat des1, Mat des2, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex, Size drawSize);
 	comp(vector<Mat> des1, vector<Mat> des2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex, Size drawSize);
 	comp(Mat foodImg, Mat mapRQ, vector<Point> pointSeq1, vector<Point> pointSeq2);
 

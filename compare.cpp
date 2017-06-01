@@ -46,56 +46,10 @@ int getDir(string dir, vector<string> &files)
     return 0;
 }
 
-Mat getNewDes(Mat des0, int startPointIndex)
-{
-	int delta = 3;
-	Mat resultDes = des0.clone();
-
-	for(int i = 0 ; i < (int)resultDes.rows ; i++)
-	{
-		for(int j = 0 ; j < (int)resultDes.cols ; j++)
-		{
-			if(abs(i-j) < delta)
-				resultDes.at<double>(i, j) = 0.0;
-			else
-			{
-				resultDes.at<double>(i, j) = des0.at<double>((i+startPointIndex)%resultDes.rows, (j+startPointIndex)%resultDes.cols);
-			}
-		}
-	}
-	imwrite("desSeq/"+to_string(startPointIndex)+".png", resultDes);
-	return resultDes;
-}
-
 // constructor
 comp::comp()
 {
 	setInitial();
-}
-
-comp::comp(Mat descri1, Mat descri2, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex, Size drawSize)
-{
-	_pointSeq1 = pointSeq1;
-	_pointSeq2 = pointSeq2;
-	_fIndex = foodIndex;
-	_cIndex = contourIndex;
-	_rDesSize = (int)pointSeq1.size();
-	_qDesSize = (int)pointSeq2.size();
-	_drawSize = drawSize;
-	setInitial();
-
-	if(pointSeq1.size() >= pointSeq2.size())
-		for(int i = 0 ; i < pointSeq1.size() ; i++)
-			compareDesN(getNewDes(descri1, i), descri2, i, true);
-	else
-	{
-		for(int i = 0 ; i < pointSeq2.size() ; i++)
-		{
-			compareDesN(descri1, getNewDes(descri2, i), i, false);
-		}
-	}
-
-	localMaxOfRQMap();
 }
 
 comp::comp(Mat descri1, vector<Mat> descri2Seq)
@@ -153,7 +107,7 @@ comp::comp(Mat foodImg, Mat mapRQ, vector<Point> pointSeq1, vector<Point> pointS
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 30.0;
+	_thresholdScore = 20.0;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
 	_range = 0;
@@ -436,24 +390,27 @@ void comp::localMaxOfRQMap()
 
 		vector<Point> matchSeqR = subPointSeq(_pointSeq1, maxR, maxVal);
 		vector<Point> matchSeqQ = subPointSeq(_pointSeq2, maxQ, maxVal);
-
+		
 		Mat warpMat = estimateRigidTransform(matchSeqQ, matchSeqR, false); // (src/query, dst/reference)
 
 		vector<Point> newPointSeq;
-				
 		cout << warpMat.size()<<endl;
-		for(int p = 0 ; p < _pointSeq2.size() ; p++)
-		{
-			double newX = warpMat.at<double>(0, 0)*_pointSeq2[p].x + warpMat.at<double>(0, 1)*_pointSeq2[p].y + warpMat.at<double>(0, 2);
-			double newY = warpMat.at<double>(1, 0)*_pointSeq2[p].x + warpMat.at<double>(1, 1)*_pointSeq2[p].y + warpMat.at<double>(1, 2);
-			newPointSeq.push_back(Point((int) newX, (int) newY));
-		}
 
-		Mat dood = imread(dir+files[_fIndex], -1);
-		warpAffine(dood, _warpResult, warpMat, _warpResult.size());
-		fragMax.setInfo(maxR, maxQ, maxVal, _mapScore.at<double>(maxR, maxQ), _cIndex, _fIndex, warpMat, _warpResult);
-		fragMax.setError(0, 0, 0, imageOverlap(newPointSeq));
-		_frag2.push_back(fragMax);
+		if(warpMat.size() != Size(0, 0))		
+		{
+			for(int p = 0 ; p < _pointSeq2.size() ; p++)
+			{
+				double newX = warpMat.at<double>(0, 0)*_pointSeq2[p].x + warpMat.at<double>(0, 1)*_pointSeq2[p].y + warpMat.at<double>(0, 2);
+				double newY = warpMat.at<double>(1, 0)*_pointSeq2[p].x + warpMat.at<double>(1, 1)*_pointSeq2[p].y + warpMat.at<double>(1, 2);
+				newPointSeq.push_back(Point((int) newX, (int) newY));
+			}
+
+			Mat dood = imread(dir+files[_fIndex], -1);
+			warpAffine(dood, _warpResult, warpMat, _warpResult.size());
+			fragMax.setInfo(maxR, maxQ, maxVal, _mapScore.at<double>(maxR, maxQ), _cIndex, _fIndex, warpMat, _warpResult);
+			fragMax.setError(0, 0, 0, imageOverlap(newPointSeq));
+			_frag2.push_back(fragMax);
+		}
 	}
 
 	

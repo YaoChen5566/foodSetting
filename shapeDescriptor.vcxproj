@@ -129,11 +129,13 @@
     <ClCompile Include="descri.cpp" />
     <ClCompile Include="fragment.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="recipe.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="compare.h" />
     <ClInclude Include="descri.h" />
     <ClInclude Include="fragment.h" />
+    <ClInclude Include="recipe.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="tree.hh" />
