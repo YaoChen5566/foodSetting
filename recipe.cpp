@@ -20,7 +20,10 @@ void recipe::addFood(int _index, int _num, string _name, bool _type)
 	_foodNum.push_back(_num);
 	_foodName.push_back(_name);
 	_foodType.push_back(_type);
-
+	__foodIndex.push_back(_index);
+	__foodNum.push_back(_num);
+	__foodName.push_back(_name);
+	__foodType.push_back(_type);
 }
 
 void recipe::reduceFood(int _index)
@@ -103,9 +106,11 @@ void recipe::readRecipeFile(string _path)
 				{
 					token = s.substr(0, pos);
 					_foodIndex.push_back(stoi(token));
+					__foodIndex.push_back(stoi(token));
 					s.erase(0, pos + delimiter.length());
 				}
 				_foodIndex.push_back(stoi(s));
+				__foodIndex.push_back(stoi(s));
 			}
 			else if(line == 2)
 			{
@@ -113,9 +118,11 @@ void recipe::readRecipeFile(string _path)
 				{
 					token = s.substr(0, pos);
 					_foodNum.push_back(stoi(token));
+					__foodNum.push_back(stoi(token));
 					s.erase(0, pos + delimiter.length());
 				}
 				_foodNum.push_back(stoi(s));
+				__foodNum.push_back(stoi(s));
 			}
 			else if(line == 3)
 			{
@@ -123,9 +130,11 @@ void recipe::readRecipeFile(string _path)
 				{
 					token = s.substr(0, pos);
 					_foodName.push_back(token);
+					__foodName.push_back(token);
 					s.erase(0, pos + delimiter.length());
 				}
 				_foodName.push_back(s);
+				__foodName.push_back(s);
 			}
 			else
 			{
@@ -133,9 +142,11 @@ void recipe::readRecipeFile(string _path)
 				{
 					token = s.substr(0, pos);
 					_foodType.push_back(stoi(token) != 0);
+					__foodType.push_back(stoi(token) != 0);
 					s.erase(0, pos + delimiter.length());
 				}
 				_foodType.push_back(stoi(s) != 0);
+				__foodType.push_back(stoi(s) != 0);
 			}
 		}
 		line++;
@@ -164,6 +175,21 @@ void recipe::print()
 	cout << "food Type:";
 	for(vector<bool>::iterator iter = _foodType.begin() ; iter != _foodType.end() ; iter++)
 		cout << " " << *iter;
+	cout << endl;
+
+}
+
+void recipe::reset()
+{
+	_foodIndex.clear();
+	_foodNum.clear();
+	_foodName.clear();
+	_foodType.clear();
+
+	_foodIndex.assign(__foodIndex.begin(), __foodIndex.end());
+	_foodNum.assign(__foodNum.begin(), __foodNum.end());
+	_foodName.assign(__foodName.begin(), __foodName.end());
+	_foodType.assign(__foodType.begin(), __foodType.end());
 
 }
 

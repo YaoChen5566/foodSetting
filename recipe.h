@@ -14,6 +14,7 @@ public:
 	void writeRecipeFile(string _path);
 	void readRecipeFile(string _path);
 	void print();
+	void reset();
 	int size;
 	vector<int> foodIndex();
 	vector<int> foodNum();
@@ -26,4 +27,8 @@ private:
 	vector<string> _foodName;
 	vector<bool> _foodType;
 
+	vector<int> __foodIndex;
+	vector<int> __foodNum;
+	vector<string> __foodName;
+	vector<bool> __foodType;
 };
