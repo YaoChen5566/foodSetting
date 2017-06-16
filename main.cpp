@@ -133,7 +133,7 @@ int main()
 {
 	
 	////Mat userDraw = imread("test/star.png", -1);
-	//Mat userDraw = imread("inputImg/pengin.png", -1);
+	//Mat userDraw = imread("inputImg/rabbitGood.png", -1);
 
 	//Mat cannyColor = cannyThreeCh(userDraw, true);
 
@@ -241,7 +241,7 @@ int main()
 
 	//				warpAffine(foodEdge, foodEdgeAffine, tmpPairSeq.Element[k].warpMatrix, foodEdge.size());
 	//				warpAffine(food, foodStack, tmpPairSeq.Element[k].warpMatrix, food.size());
-	//				Mat addUF = addTransparent(userDraw, foodStack);
+	//				Mat addUF = addTransparent(userDraw, tmpPairSeq.Element[k].warpResult);
 
 	//				//for(int ii = 0 ; ii < tmpPairSeq.Element[k].l ; ii++)
 	//				//{
@@ -249,7 +249,7 @@ int main()
 	//				//	//circle(addUF, samplepointsOfDraw[tmpPairSeq.Element[k].cIndex][(ii+tmpPairSeq.Element[k].q)%samplepointsOfFood.size()], 1, Scalar(0, 255*(tmpPairSeq.Element[k].l-ii), 0, 255), 1);
 	//				//}
 
-	//				imwrite("testI/"+to_string(j)+"_"+to_string(k)+"_"+to_string(tmpPairSeq.Element[k].iError)+".png",addUF);
+	//				imwrite("testI/"+to_string(i)+"_"+to_string(j)+"_"+to_string(tmpPairSeq.Element[k].iError)+".png",addUF);
 
 	//				int tmpp;
 	//				//tmpPairSeq.Element[k].setError(edgeError(userDraw, foodEdgeAffine), colorError(userDraw,foodStack), refError(userDraw, foodEdgeAffine, tmpp), tmpPairSeq.Element[k].iError, tmpPairSeq.Element[k].iErrorRatio1);
@@ -488,8 +488,8 @@ void singleTest(void)
 
 
 	//clock_t start = clock(); // compare start
-	string tmp = "foodImg/040.png";
-	string tmp2 = "foodImg/039.png";
+	string tmp = "foodImg/014.png";
+	string tmp2 = "foodImg/086.png";
 	Mat input1 = imread(tmp, -1);
 	Mat input2 = imread(tmp2, -1);
 
@@ -510,7 +510,7 @@ void singleTest(void)
 	imwrite("des2.png", inputDes2);
 
 	clock_t start = clock(); // compare finish
-	comp compDes(inputDesSeq1, inputDesSeq2, descri1.sampleResult(), descri2.sampleResult(), 0, 32+2, input1.size());
+	comp compDes(inputDesSeq1, inputDesSeq2, descri1.sampleResult(), descri2.sampleResult(), 0, 76+2, input1.size());
 	//comp compDes(descri1.seqDescri(), descri2.seqDescri(), descri1.sampleResult(), descri2.sampleResult(), 0, 103+2, input1.size());
 	clock_t finish = clock(); // compare finish
 	cout << finish - start<<endl;

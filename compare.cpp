@@ -79,15 +79,80 @@ vector<double> norVec(Point pre, Point tgt, Point nxt)
 	return norT;
 }
 
-void icp(vector<Point> contourPoint, vector<Point> foodPoint, double &icpErr, Mat &newWarpMat)
+void icp(vector<Point> contourPoint, vector<Point> foodPoint, double &dX, double &dY, double &dTheta, Mat &newWarpMat)
 {
+	// contour points: Q
+	// food points: P, P', P''...
 	double minDist;
 	int minPointIndex;
+
+	double meanCX = 0.0;
+	double meanCY = 0.0;
+	double meanFX = 0.0;
+	double meanFY = 0.0;
+
 
 	vector<Point> contourPointPair;
 	vector<Point> foodPointPair;
 	vector<double> distVec;
 
+	for(int i = 0 ; i < contourPoint.size() ; i++)
+	{
+		meanCX += contourPoint[i].x;
+		meanCY += contourPoint[i].y;
+	}
+	for(int i = 0 ; i < foodPoint.size() ; i++)
+	{
+		meanFX += foodPoint[i].x;
+		meanFY += foodPoint[i].y;
+	}
+	meanCX /= contourPoint.size();
+	meanCY /= contourPoint.size();
+	meanFX /= foodPoint.size();
+	meanFY /= foodPoint.size();
+
+	for(int i = 0 ; i < foodPoint.size() ; i++)
+	{
+		for(int j = 0 ; j < contourPoint.size() ; j++)
+		{
+			double dist = sqrt(pow(contourPoint[j].x-foodPoint[i].x, 2)+pow(contourPoint[j].y-foodPoint[i].y, 2));
+			if(j == 0)
+			{
+				minDist = dist;
+				minPointIndex = j;
+			}
+			else
+			{
+				if(dist < minDist)
+				{
+					minDist = dist;
+					minPointIndex = j;
+				}
+			}
+		}
+		//compare norm
+		vector<double> normVec = norVec(foodPoint[(i-1)%foodPoint.size()], foodPoint[i], foodPoint[(i+1)%foodPoint.size()]);
+
+		vector<double> normFC;
+		normFC.push_back(contourPoint[minPointIndex].x-foodPoint[i].x);
+		normFC.push_back(contourPoint[minPointIndex].y-foodPoint[i].y);
+		double cosTheta = (normVec[0]*normFC[0]+normVec[1]*normFC[1]) / (sqrt(normVec[0]*normVec[0]+normVec[1]*normVec[1])*sqrt(normFC[0]*normFC[0]+normFC[1]*normFC[1]));
+		double theta = acos (cosTheta) * 180.0 / PI;
+
+		if(theta <= 60.0)
+		{
+			//cout <<"!"<<endl;
+			contourPointPair.push_back(contourPoint[minPointIndex]);
+			foodPointPair.push_back(foodPoint[i]);
+			distVec.push_back(minDist);
+		}
+			//contourPointPair.push_back(contourPoint[minPointIndex]);
+			//foodPointPair.push_back(foodPoint[i]);
+			//distVec.push_back(minDist);
+	}
+	cout << "PairSize: "<<contourPointPair.size()<<" "<<foodPointPair.size()<<endl;
+
+	/*
 	for(int i = 0 ; i < contourPoint.size() ; i++)
 	{
 		for(int j = 0 ; j < foodPoint.size() ; j++)
@@ -131,11 +196,30 @@ void icp(vector<Point> contourPoint, vector<Point> foodPoint, double &icpErr, Ma
 			distVec.push_back(minDist);
 		}
 	}
+	*/
 
-	//newWarpMat = estimateRigidTransform(contourPointPair, foodPointPair, false);
+	newWarpMat = estimateRigidTransform(contourPointPair, foodPointPair, false);
 
-	icpErr = accumulate(distVec.begin(), distVec.end(), 0.0)/distVec.size();
-	newWarpMat = estimateRigidTransform(contourPointPair, foodPointPair, false).clone();
+	cout <<"tset warp size: "<<newWarpMat.size()<<endl;
+
+	double sumFXCY = 0;
+	double sumFYCX = 0;
+	double sumFXCX = 0;
+	double sumFYCY = 0;
+
+	for(int i = 0 ; i < contourPointPair.size() ; i++) //contourPointPair.size == foodPointPair.size
+	{
+		sumFXCY += (foodPointPair[i].x-meanFX) * (contourPointPair[i].y-meanCY);
+		sumFYCX += (foodPointPair[i].y-meanFY) * (contourPointPair[i].x-meanCX);
+		sumFXCX += (foodPointPair[i].x-meanFX) * (contourPointPair[i].x-meanCX);
+		sumFYCY += (foodPointPair[i].y-meanFY) * (contourPointPair[i].y-meanCY);
+	}
+
+	dTheta = atan2(sumFXCY-sumFYCX, sumFXCX+sumFYCY);
+	dX = meanCX - (meanFX*cos(dTheta) - meanFY*sin(dTheta));
+	dY = meanCY - (meanFX*sin(dTheta) - meanFY*cos(dTheta));
+
+	cout << "dTheta: "<<dTheta<<", dX: "<<dX<<", dY: "<<dY<<endl;
 }
 
 // constructor
@@ -453,12 +537,17 @@ void comp::localMaxOfRQMap()
 	vector<string> files = vector<string>();
 	getDir(dir, files);
 
+	int iterIcp = 0;
 	int maxVal = -1;
 	int maxR = -1;
 	int maxQ = -1;
 	double iError = 0.0;
 	double preIcpErr= -1.0;
 	double curIcpErr = 0.0;
+	double dX, dY, dTheta;
+	double minDist = 0.0;
+	double dist = 0.0;
+	int minDistIdx = 0;
 	Mat warpMat;
 
 	vector<Point> newPointSeq;
@@ -466,6 +555,7 @@ void comp::localMaxOfRQMap()
 	
 	while(maxVal != 0)
 	{
+		maxVal = -1;
 		// get local maximum
 		for(int i = 0 ; i < _mapRQ.rows ; i++) //r
 		{
@@ -485,7 +575,7 @@ void comp::localMaxOfRQMap()
 			vector<Point> matchSeqR = subPointSeq(_pointSeq1, maxR, maxVal);
 			vector<Point> matchSeqQ = subPointSeq(_pointSeq2, maxQ, maxVal);
 			warpMat = estimateRigidTransform(matchSeqQ, matchSeqR, false);// src, dst
-
+			cout << "warpMatSize: "<<warpMat.size()<<endl;
 			if(warpMat.size() != Size(0, 0))
 			{
 				for(int p = 0 ; p < _pointSeq2.size() ; p++)
@@ -493,124 +583,214 @@ void comp::localMaxOfRQMap()
 					double newX = warpMat.at<double>(0, 0)*_pointSeq2[p].x + warpMat.at<double>(0, 1)*_pointSeq2[p].y + warpMat.at<double>(0, 2);
 					double newY = warpMat.at<double>(1, 0)*_pointSeq2[p].x + warpMat.at<double>(1, 1)*_pointSeq2[p].y + warpMat.at<double>(1, 2);
 					newPointSeq.push_back(Point((int) newX, (int) newY));
+					//curIcpErr += pow(newPointSeq[p].x-_pointSeq1[p].x, 2)+pow(newPointSeq[p].y-_pointSeq1[p].y, 2);
 				}
 			}
 
-			iError = imageOverlap(newPointSeq);
-			//cout <<"iError: " <<iError<<endl;
-			if(iError < 0.5)
+			//get icp error
+			for(int i = 0 ; i < newPointSeq.size() ; i++)
 			{
-				Mat newWarpMat = warpMat.clone();
-				// do icp
-				icp(_pointSeq1, newPointSeq, curIcpErr, newWarpMat);
-
-				while(curIcpErr< preIcpErr || preIcpErr == -1)
+				for(int j = 0 ; j < _pointSeq1.size() ; j++)
 				{
-					warpMatSeq.push_back(newWarpMat);
-					if(newWarpMat.size() != Size(0, 0))
-					{
-						newPointSeq.clear();
-						for(int p = 0 ; p < _pointSeq2.size() ; p++)
-						{
-							double newX = newWarpMat.at<double>(0, 0)*_pointSeq2[p].x + newWarpMat.at<double>(0, 1)*_pointSeq2[p].y + newWarpMat.at<double>(0, 2);
-							double newY = newWarpMat.at<double>(1, 0)*_pointSeq2[p].x + newWarpMat.at<double>(1, 1)*_pointSeq2[p].y + newWarpMat.at<double>(1, 2);
-							newPointSeq.push_back(Point((int) newX, (int) newY));
-						}
-					}
+					dist = sqrt(pow(_pointSeq1[j].x-newPointSeq[i].x, 2)+pow(_pointSeq1[j].y-newPointSeq[i].y, 2));
+					if(j == 0)
+						minDist = dist;
 					else
-						break;
+						if(dist < minDist)
+							minDist = dist;
 					
-					preIcpErr = curIcpErr;
-					icp(_pointSeq1, newPointSeq, curIcpErr, newWarpMat);
-
-					cout << "pre: "<<preIcpErr<<", current: "<<curIcpErr<<endl;
 				}
+				curIcpErr += dist;
+			}
 
+			//curIcpErr/=_pointSeq2.size();
+			Mat newWarpMat = warpMat.clone();
+			do
+			{
+				Mat drawTest = Mat::zeros(Size(250, 250), CV_8UC3);
 
-				Mat dood = imread(dir+files[_fIndex], -1);
-				_warpResult = dood.clone();
-				newPointSeq.clear();
+				drawContours(drawTest, vector<vector<Point>>(1, _pointSeq1), 0, Scalar(255, 0, 0), 2, 8);
+				drawContours(drawTest, vector<vector<Point>>(1, newPointSeq), 0, Scalar(0, 0, 255), 2, 8);
+				imwrite(to_string(iterIcp)+".png", drawTest);
+				iterIcp++;
 
-				cout <<"size: "<<warpMatSeq.size()<<endl;
-				for(int w = 0 ; w < warpMatSeq.size() ; w++)
+				warpMatSeq.push_back(newWarpMat);
+				preIcpErr = curIcpErr;
+
+				icp(_pointSeq1, newPointSeq, dX, dY, dTheta, newWarpMat);
+				if(newWarpMat.size() == Size(0, 0))
+					break;
+				/*
+				newWarpMat.at<double>(0, 0) = cos(dTheta);
+				newWarpMat.at<double>(0, 1) = -sin(dTheta);
+				newWarpMat.at<double>(1, 0) = sin(dTheta);
+				newWarpMat.at<double>(1, 1) = cos(dTheta);
+				newWarpMat.at<double>(0, 2) = dX;
+				newWarpMat.at<double>(1, 2) = dY;
+				*/
+				cout << "SizeP: "<<newPointSeq.size()<<endl;
+				for(int p = 0 ; p < newPointSeq.size() ; p++)
 				{
-					warpAffine(_warpResult, _warpResult, warpMatSeq[w], _warpResult.size());
-					for(int p = 0 ; p < _pointSeq2.size() ; p++)
-					{
-						double newX = warpMatSeq[w].at<double>(0, 0)*_pointSeq2[p].x + warpMatSeq[w].at<double>(0, 1)*_pointSeq2[p].y + warpMatSeq[w].at<double>(0, 2);
-						double newY = warpMatSeq[w].at<double>(1, 0)*_pointSeq2[p].x + warpMatSeq[w].at<double>(1, 1)*_pointSeq2[p].y + warpMatSeq[w].at<double>(1, 2);
-						newPointSeq.assign(p, Point((int) newX, (int) newY));
-					}
+					double newX = newWarpMat.at<double>(0, 0)*newPointSeq[p].x + newWarpMat.at<double>(0, 1)*newPointSeq[p].y + newWarpMat.at<double>(0, 2);
+					double newY = newWarpMat.at<double>(1, 0)*newPointSeq[p].x + newWarpMat.at<double>(1, 1)*newPointSeq[p].y + newWarpMat.at<double>(1, 2);
+					newPointSeq.assign(p, Point((int) newX, (int) newY));
+
+					curIcpErr += pow(newPointSeq[p].x-_pointSeq1[p].x, 2)+pow(newPointSeq[p].y-_pointSeq1[p].y, 2);
 				}
-				frag fragMax;
-				fragMax.setInfo(maxR, maxQ, maxVal, _mapScore.at<double>(maxR, maxQ), _cIndex, _fIndex, warpMatSeq[0], _warpResult);
-				fragMax.setError(0, 0, 0, imageOverlap(newPointSeq), _ratio1);
-				_frag2.push_back(fragMax);
-				break;
+				//get icp error
+				for(int i = 0 ; i < newPointSeq.size() ; i++)
+				{
+					for(int j = 0 ; j < _pointSeq1.size() ; j++)
+					{
+						dist = sqrt(pow(_pointSeq1[j].x-newPointSeq[i].x, 2)+pow(_pointSeq1[j].y-newPointSeq[i].y, 2));
+						if(j == 0)
+							minDist = dist;
+						else
+							if(dist < minDist)
+								minDist = dist;
+					
+					}
+					curIcpErr += dist;
+				}
+				cout << curIcpErr<<endl;
+				//curIcpErr/=(int)newPointSeq.size();
+				cout << "pre: "<<preIcpErr<<", current: "<<curIcpErr<<endl;
 			}
-			else
-			{
-				_mapRQ.at<int>(maxR, maxQ) = 0;
-			}
-		}
-	}
-	
+			while(curIcpErr < preIcpErr);
 
-	
-	/*
-	string dir = string("foodImg/");
-	vector<string> files = vector<string>();
-	getDir(dir, files);
 
-	cout << dir+files[_fIndex]<<endl;
 
-	int maxVal = -1;
-	int maxR = -1;
-	int maxQ = -1;
 
-	// find local maximum in RQmap
-	for(int i = 0 ; i < _mapRQ.rows ; i++) //r
-	{
-		for(int j = 0 ; j < _mapRQ.cols ; j++) //q
-		{
-			if(_mapRQ.at<int>(i, j) > maxVal)
-			{
-				maxVal = _mapRQ.at<int>(i, j);
-				maxR = i;
-				maxQ = j;
-			}
-		}
-	}
+			//Mat newWarpMat = warpMat.clone();
+			//warpMatSeq.push_back(newWarpMat);
+			//icp(_pointSeq1, newPointSeq, dX, dY, dTheta);
+			////newWarpMat = warpMat.clone();
+			//// do icp
+			//while(curIcpErr< preIcpErr || preIcpErr == -1)
+			//{
+			//	iterIcp++;
+			//	Mat drawTest = Mat::zeros(Size(250, 250), CV_8UC3);
 
-	if(maxVal > 0 && maxR != -1 && maxQ != -1)
-	{
-		frag fragMax;
+			//	drawContours(drawTest, vector<vector<Point>>(1, _pointSeq1), 0, Scalar(255, 0, 0), 2, 8);
+			//	drawContours(drawTest, vector<vector<Point>>(1, newPointSeq), 0, Scalar(0, 0, 255), 2, 8);
+			//	imwrite(to_string(iterIcp)+".png", drawTest);
 
-		vector<Point> matchSeqR = subPointSeq(_pointSeq1, maxR, maxVal);
-		vector<Point> matchSeqQ = subPointSeq(_pointSeq2, maxQ, maxVal);
-		
-		Mat warpMat = estimateRigidTransform(matchSeqQ, matchSeqR, false); // (src/query, dst/reference)
+			//	preIcpErr = curIcpErr;
+			//	newWarpMat.at<double>(0, 0) = cos(dTheta);
+			//	newWarpMat.at<double>(0, 1) = -sin(dTheta);
+			//	newWarpMat.at<double>(1, 0) = sin(dTheta);
+			//	newWarpMat.at<double>(1, 1) = cos(dTheta);
+			//	newWarpMat.at<double>(0, 2) = dX;
+			//	newWarpMat.at<double>(1, 2) = dY;
 
-		vector<Point> newPointSeq;
-		cout << warpMat.size()<<endl;
+			//	if(preIcpErr != -1)
+			//		warpMatSeq.push_back(newWarpMat);
+			//			
+			//	newPointSeq.clear();
+			//	for(int p = 0 ; p < newPointSeq.size() ; p++)
+			//	{
+			//		double newX = newWarpMat.at<double>(0, 0)*newPointSeq[p].x + newWarpMat.at<double>(0, 1)*newPointSeq[p].y + newWarpMat.at<double>(0, 2);
+			//		double newY = newWarpMat.at<double>(1, 0)*newPointSeq[p].x + newWarpMat.at<double>(1, 1)*newPointSeq[p].y + newWarpMat.at<double>(1, 2);
+			//		newPointSeq.assign(p, Point((int) newX, (int) newY));
 
-		if(warpMat.size() != Size(0, 0))		
-		{
-			for(int p = 0 ; p < _pointSeq2.size() ; p++)
-			{
-				double newX = warpMat.at<double>(0, 0)*_pointSeq2[p].x + warpMat.at<double>(0, 1)*_pointSeq2[p].y + warpMat.at<double>(0, 2);
-				double newY = warpMat.at<double>(1, 0)*_pointSeq2[p].x + warpMat.at<double>(1, 1)*_pointSeq2[p].y + warpMat.at<double>(1, 2);
-				newPointSeq.push_back(Point((int) newX, (int) newY));
-			}
+			//		curIcpErr += pow(newPointSeq[p].x-_pointSeq1[p].x, 2)+pow(newPointSeq[p].y-_pointSeq1[p].y, 2);
+			//	}
+			//	cout << curIcpErr<<endl;
+			//	curIcpErr/=newPointSeq.size();
+			//		
+
+			//	icp(_pointSeq1, newPointSeq, dX, dY, dTheta);
+			//		
+			//	cout << "pre: "<<preIcpErr<<", current: "<<curIcpErr<<endl;
+			//}
+			
+
 
 			Mat dood = imread(dir+files[_fIndex], -1);
-			warpAffine(dood, _warpResult, warpMat, _warpResult.size());
-			fragMax.setInfo(maxR, maxQ, maxVal, _mapScore.at<double>(maxR, maxQ), _cIndex, _fIndex, warpMat, _warpResult);
+			_warpResult = dood.clone();
+			newPointSeq.clear();
+
+			cout <<"size: "<<warpMatSeq.size()<<endl;
+
+			vector<Point> finalPointSeq(_pointSeq2);
+			//newPointSeq.assign(_pointSeq2.begin(), _pointSeq2.end());
+			for(int w = 0 ; w < warpMatSeq.size() ; w++)
+			{
+				warpAffine(_warpResult, _warpResult, warpMatSeq[w], _warpResult.size());
+				for(int p = 0 ; p < finalPointSeq.size() ; p++)
+				{
+					double newX = warpMatSeq[w].at<double>(0, 0)*finalPointSeq[p].x + warpMatSeq[w].at<double>(0, 1)*finalPointSeq[p].y + warpMatSeq[w].at<double>(0, 2);
+					double newY = warpMatSeq[w].at<double>(1, 0)*finalPointSeq[p].x + warpMatSeq[w].at<double>(1, 1)*finalPointSeq[p].y + warpMatSeq[w].at<double>(1, 2);
+					newPointSeq.assign(p, Point((int) newX, (int) newY));
+				}
+			}
+			frag fragMax;
+			cout <<"iii: "<< imageOverlap(newPointSeq)<<endl;
+			fragMax.setInfo(maxR, maxQ, maxVal, _mapScore.at<double>(maxR, maxQ), _cIndex, _fIndex, warpMatSeq[0], _warpResult);
 			fragMax.setError(0, 0, 0, imageOverlap(newPointSeq), _ratio1);
 			_frag2.push_back(fragMax);
+			break;
+
 		}
 	}
-	*/
+	
+
+	
+	
+	//string dir = string("foodImg/");
+	//vector<string> files = vector<string>();
+	//getDir(dir, files);
+
+	//cout << dir+files[_fIndex]<<endl;
+
+	//int maxVal = -1;
+	//int maxR = -1;
+	//int maxQ = -1;
+
+	//// find local maximum in RQmap
+	//for(int i = 0 ; i < _mapRQ.rows ; i++) //r
+	//{
+	//	for(int j = 0 ; j < _mapRQ.cols ; j++) //q
+	//	{
+	//		if(_mapRQ.at<int>(i, j) > maxVal)
+	//		{
+	//			maxVal = _mapRQ.at<int>(i, j);
+	//			maxR = i;
+	//			maxQ = j;
+	//		}
+	//	}
+	//}
+
+	//if(maxVal > 0 && maxR != -1 && maxQ != -1)
+	//{
+	//	frag fragMax;
+
+	//	vector<Point> matchSeqR = subPointSeq(_pointSeq1, maxR, maxVal);
+	//	vector<Point> matchSeqQ = subPointSeq(_pointSeq2, maxQ, maxVal);
+	//	
+	//	Mat warpMat = estimateRigidTransform(matchSeqQ, matchSeqR, false); // (src/query, dst/reference)
+
+	//	vector<Point> newPointSeq;
+	//	cout << warpMat.size()<<endl;
+
+	//	if(warpMat.size() != Size(0, 0))		
+	//	{
+	//		for(int p = 0 ; p < _pointSeq2.size() ; p++)
+	//		{
+	//			double newX = warpMat.at<double>(0, 0)*_pointSeq2[p].x + warpMat.at<double>(0, 1)*_pointSeq2[p].y + warpMat.at<double>(0, 2);
+	//			double newY = warpMat.at<double>(1, 0)*_pointSeq2[p].x + warpMat.at<double>(1, 1)*_pointSeq2[p].y + warpMat.at<double>(1, 2);
+	//			newPointSeq.push_back(Point((int) newX, (int) newY));
+	//		}
+
+	//		Mat dood = imread(dir+files[_fIndex], -1);
+	//		warpAffine(dood, _warpResult, warpMat, _warpResult.size());
+	//		fragMax.setInfo(maxR, maxQ, maxVal, _mapScore.at<double>(maxR, maxQ), _cIndex, _fIndex, warpMat, _warpResult);
+	//		cout <<  imageOverlap(newPointSeq) << " , is iErr"<<endl;
+	//		fragMax.setError(0, 0, 0, imageOverlap(newPointSeq), _ratio1);
+	//		_frag2.push_back(fragMax);
+	//	}
+	//}
+	
 
 	/*
 	//cut the RQ map into four part
