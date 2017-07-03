@@ -23,7 +23,7 @@ public:
 	comp();
 	comp(vector<Mat> des1, vector<Mat> des2Seq, vector<Point> pointSeq1, vector<Point> pointSeq2, int contourIndex, int foodIndex, Size drawSize);
 	comp(Mat foodImg, Mat mapRQ, vector<Point> pointSeq1, vector<Point> pointSeq2);
-
+	comp(vector<Mat> cDes1, vector<Mat> cDes2);
 	//frag fragment(int rS, int qS, int mL);
 
 	vector<frag> fragList2();
@@ -45,6 +45,7 @@ private:
 	void compareDes(Mat input1, Mat input2);
 	void compareDesN(Mat input1, Mat input2, int index, bool cLarge);
 	void compareDesN2(Mat input1, Mat input2, int index);
+	void compareDesG(Mat input1, Mat input2, int index, bool cLarge);
 	void clearFrag();
 	void disFrag();
 	void localMin();
@@ -64,11 +65,13 @@ private:
 	int _fIndex;
 	int _cIndex;
 	double _thresholdScore;
+	double _thresholdGroup;
 	double _score;
 	double _minScore;
 	int _rDesSize;
 	int _qDesSize;
 	double _ratio1;
+	bool _group;
 	
 	vector<Point> _maxVec;
 	vector<Point> _minVec;

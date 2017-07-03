@@ -234,20 +234,6 @@ void icp(vector<Point> contourPoint, vector<Point> foodPoint, double &dX, double
 	cout << "dTheta: "<<dTheta<<", dX: "<<dX<<", dY: "<<dY<<endl;
 }
 
-void testICP()
-{
-	vector<Point> Q;
-	vector<Point> P;
-
-	for(int i = 0 ; i < 5 ; i++)
-	{
-		for(int j = 0 ; j < 10 ; j++)
-		{
-			Q.push_back(Point(0, 0));
-		}
-	}
-}
-
 // constructor
 comp::comp()
 {
@@ -309,10 +295,15 @@ comp::comp(Mat foodImg, Mat mapRQ, vector<Point> pointSeq1, vector<Point> pointS
 	_mapRQ = mapRQ.clone();
 }
 
+comp::comp(vector<Mat> cDes1, vector<Mat> cDes2)
+{
+}
+
 //set initial
 void comp::setInitial()
 {
-	_thresholdScore = 150.0;
+	_thresholdScore = 300.0;
+	_thresholdGroup = 100.0;
 	_minScore = _thresholdScore;
 	_startIndex1 = 0;
 	_startIndex2 = 0;
@@ -323,6 +314,7 @@ void comp::setInitial()
 	//Mat _warpMatrixMap[_rDesSize][_qDesSize];
 	Mat tmp = Mat::zeros(Size(3, 2), CV_64F);
 	_warpMatrixMap.resize(_qDesSize, vector<Mat>(_rDesSize, tmp)); //Size(q, r): x id q, y is r
+	_group = false;
 }
 
 //two single descriptor
@@ -427,7 +419,7 @@ void comp::compareDesN(Mat input1, Mat input2, int index, bool cLarge)
 	double tmpSum = 0;
 	double getScore = 0;
 	integral(sub, integral1, integral2);
-	rLim = (int)0.5*integral2.cols; // square size
+	rLim = (int)0.3*integral2.cols; // square size
 
 
 	for(int i = 0 ; i < integral2.cols ; i++)
@@ -522,6 +514,62 @@ void comp::compareDesN2(Mat input1, Mat input2, int index)
 			_score = getScore;
 			_startIndex1 = i;
 			_startIndex2 = i+index;		
+		}
+	}
+}
+
+//find group
+void comp::compareDesG(Mat input1, Mat input2, int index, bool cLarge)
+{
+	Mat smallerMat;
+	Mat sub;
+
+	if(cLarge)
+	{
+		smallerMat = input1(Rect(0, 0, input2.cols, input2.rows));
+		sub = smallerMat - input2;
+	}
+	else
+	{
+		smallerMat = input2(Rect(0, 0, input1.cols, input1.rows));
+		sub = input1 - smallerMat;
+	}
+
+	Mat integral1; // sum
+	Mat integral2; // square sum
+
+	int rLim; 
+	int lefttopPoint1 = 0;
+	int lefttopPoint2 = 0;
+	double tmpSum = 0;
+	double getScore = 0;
+	integral(sub, integral1, integral2);
+	rLim = (int)0.8*integral2.cols; // square size
+
+	for(int i = 0 ; i < integral2.cols ; i++)
+	{		
+		if(cLarge)
+		{
+			_startIndex1 = (i+index)%input1.cols;
+			_startIndex2 = i;
+		}
+		else
+		{
+			_startIndex1 = i;
+			_startIndex2 = (i+index)%input2.cols;
+		}
+
+		for(int r = integral2.cols ; r > rLim ; r--)
+		{
+			_range = r;
+
+			if( (i+r) < integral2.cols)
+				tmpSum = integral2.at<double>(i, i) + integral2.at<double>(i+r, i+r)-integral2.at<double>(i, i+r)-integral2.at<double>(i+r, i);
+			
+			getScore = tmpSum/pow(r,2);	
+
+			if(getScore < _thresholdGroup)
+				_group = true;
 		}
 	}
 }
@@ -623,7 +671,7 @@ void comp::localMaxOfRQMap()
 
 				drawContours(drawTest, vector<vector<Point>>(1, _pointSeq1), 0, Scalar(255, 0, 0), 2, 8);
 				drawContours(drawTest, vector<vector<Point>>(1, newPointSeq), 0, Scalar(0, 0, 255), 2, 8);
-				//imwrite(to_string(iterIcp)+".png", drawTest);
+				imwrite(to_string(iterIcp)+".png", drawTest);
 				iterIcp++;
 
 				warpMatSeq.push_back(newWarpMat.clone());
@@ -681,7 +729,6 @@ void comp::localMaxOfRQMap()
 				warpAffine(dood, dood, warpMatSeq[w], dood.size());
 				//dood = _warpResult.clone();
 				//imwrite(to_string(w)+"_.png", dood);
-
 				for(int p = 0 ; p < finalPointSeq.size() ; p++)
 				{
 					double newX = warpMatSeq[w].at<double>(0, 0)*finalPointSeq[p].x + warpMatSeq[w].at<double>(0, 1)*finalPointSeq[p].y + warpMatSeq[w].at<double>(0, 2);
@@ -689,10 +736,11 @@ void comp::localMaxOfRQMap()
 					finalPointSeq[p].x = (int) newX;
 					finalPointSeq[p].y = (int) newY;
 				}
+
 			}
 			frag fragMax;
 			//cout <<"iii: "<< imageOverlap(newPointSeq)<<endl;
-			fragMax.setInfo(maxR, maxQ, maxVal, _mapScore.at<double>(maxR, maxQ), _cIndex, _fIndex, warpMatSeq[0], dood);
+			fragMax.setInfo(maxR, maxQ, maxVal, _mapScore.at<double>(maxR, maxQ), _cIndex, _fIndex, warpMatSeq, dood);
 			fragMax.setError(0, 0, 0, imageOverlap(finalPointSeq), _ratio1);
 			_frag2.push_back(fragMax);
 			break;
