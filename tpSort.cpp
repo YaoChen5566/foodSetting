@@ -8,6 +8,8 @@ using namespace std;
 
 //topological sort with Kahn's algorithm
 
+vector<int> tmpp;
+
 topo::topo(int num)
 {
 	_num = num;
@@ -15,19 +17,23 @@ topo::topo(int num)
 	for(int i = 0 ; i < _num ; i++)
 	{
 		vector<int> tmp;
+		vector<double> tmpd;
 		_adjList.push_back(tmp);
+		_adjListW.push_back(tmpd);
 		_count.push_back(0);
 	}
 }
 
-void topo::addEdge(int start, int end)
+void topo::addEdge(int start, int end, double weight)
 {
 	_adjList[start].push_back(end);
+	_adjListW[start].push_back(weight);
 }
 
-void topo::delEdge(int start, int end)
+void topo::delEdge(int start, int end, double weight)
 {
 	vector<int>::iterator it = find (_adjList[start].begin(), _adjList[start].end(), end);
+	vector<double>::iterator itw = find (_adjListW[start].begin(), _adjListW[start].end(), weight);
 	if (it != _adjList[start].end())
 	{
 		_adjList[start].erase(it);
@@ -87,7 +93,7 @@ void topo::topoSort()
 }
  
 // Returns true if the graph contains a cycle, else false.
-bool topo::isCyclic()
+void topo::isCyclic()
 {
 	_flag = false;
 	//-1 not explore, 0 been explore, 1 fully explored
@@ -98,35 +104,68 @@ bool topo::isCyclic()
 
 	for(int i = 0 ; i < _num ; i++)
 	{
-		if(_visited[i] == -1)
-			dfs(i);
+		dfs(i);
 		if(_flag)
 			break;
+
+
+		_visited.clear();
+		for(int i = 0 ; i < _num ; i++)
+			_visited.push_back(-1);
 	}
 
+	for(int i = 0 ; i < tmpp.size() ; i++)
+		cout << "tmp size: "<<tmpp[i]<<endl;
+
+	//del the min weight edge
+	vector<double> tmpWeight;
 	if(_flag == true)
-		return true;
-	else
-		return false;
+	{
+		cout <<"find cycle, del the min edge in the cycle"<<endl;
+		for(int i = 0 ; i < tmpp.size() ; i++)
+			tmpWeight.push_back(getWeight(tmpp[i], tmpp[(i+1)%tmpp.size()]));
+
+		double minWeight = *min_element(tmpWeight.begin(), tmpWeight.end());
+
+		int idx;
+
+		for(int i = 0 ; i < tmpWeight.size() ; i++)
+			if(tmpWeight[i] == minWeight)
+				idx = i;
+
+		delEdge(tmpp[idx], tmpp[(idx+1)%tmpp.size()], minWeight);
+
+	}
+
 }
 
 void topo::dfs(int s)
 {	
-	for(int i = 0 ; i < _num ; i++)
-	{
-		cout << _visited[i]<<" ";
-	}
-	cout << endl;
+	cout << s<<endl;
+	tmpp.push_back(s);
 	_visited[s] = 0;
 	for(int i = 0 ; i < _adjList[s].size() ; i++)
 	{
 		if(_visited[ _adjList[s][i]] == -1)
 			dfs(_adjList[s][i]);
-		else
-		{
+		else if(_visited[_adjList[s][i]] == 0)
 			_flag = true;
-			return;
-		}
+
+		if(_flag)
+			break;
+			
 	}
 	_visited[s] = 1;
+	if(!_flag)
+		tmpp.pop_back();
+}
+
+double topo::getWeight(int start, int end)
+{
+	int index = -1;
+	for(int i = 0 ; i < _adjList[start].size() ; i++)
+		if(_adjList[start][i] == end)
+			index = i;
+	
+	return _adjListW[start][index];
 }

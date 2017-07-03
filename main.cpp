@@ -768,22 +768,21 @@ void recipeTest(void)
 //topo test
 void topoTest(void)
 {
-	topo G(4);
+	topo G(5);
 	
-	G.addEdge(0, 1);
-	G.addEdge(1, 2);
-	G.addEdge(2, 3);
-	G.addEdge(2, 0);
+	G.addEdge(0, 1, 10.0);
+	G.addEdge(2, 0, 5);
+	G.addEdge(0, 3, 12);
+	//G.addEdge(0, 4, 13);
+	G.addEdge(1, 2, 1.0);
+
 	G.printAdjList();
 
-	if(G.isCyclic())
-        cout << "Graph contains cycle";
-    else
-        cout << "Graph doesn't contain cycle";
-    
+	G.isCyclic();
+
+   	G.printAdjList();
 	cout <<endl;
-	G.delEdge(2, 3);
-	G.printAdjList();
+
 
 }
 
